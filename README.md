@@ -126,7 +126,7 @@ The lambdas main entrypoint is `handler` in `monsternames.api\main`. It also use
 Simply update code as appropriate then move on to manual then automated testing.
 
 ### Manually testing the containerised lambda
-Simply build and run the container, with a localised DynamoDB backend, using docker-compose:
+Simply build and run the container, with a localised DynamoDB backend, using docker-compose.
 
 1. `docker-compose up` will run a local DynamoDB instance, and monsternames container, on the same network.
 
@@ -139,7 +139,11 @@ curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"pat
 Where:
 - "/endpoint" is a valid endpoint as per the configuration file
 - "METHOD" is the HTTP method of our request, valid values are as per the open-api specification.
-- "PAYLOAD" is the payload of a POST request
+- "PAYLOAD" is the payload of a POST request. For example:
+
+```
+"{\"first_name\":\"fluffy\",\"last_name\":\"brown\"}"
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

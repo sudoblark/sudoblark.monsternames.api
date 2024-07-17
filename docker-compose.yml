@@ -2,15 +2,20 @@ version: '3.5'
 
 services:
   dynamo:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     container_name: dynamodb-local
     image: amazon/dynamodb-local
     networks:
       - monsternames
     ports:
       - '8000:8000'
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
 
   monsternames:
     depends_on:
+      - dynamo
+    links:
       - dynamo
     networks:
       - monsternames
@@ -20,9 +25,14 @@ services:
     ports:
       - '9000:8080'
     volumes:
-      - './config.ini:/home/config.ini'
+      - type: bind
+        source: ./config.ini
+        target: /home/config.ini
     environment:
       config_file: '/home/config.ini'
+      AWS_ACCESS_KEY_ID: 'DUMMYIDEXAMPLE'
+      AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
+      AWS_DEFAULT_REGION: 'eu-west-1'
 
 networks:
   monsternames:

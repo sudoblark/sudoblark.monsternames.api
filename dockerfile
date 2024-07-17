@@ -7,7 +7,7 @@ COPY requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install -r requirements.txt
 
 # Copy function code
-COPY monsternames.api/* ${LAMBDA_TASK_ROOT}
+COPY ./monsternames.api/* ${LAMBDA_TASK_ROOT}
 
 # Set handler for the lambda event
 CMD [ "main.handler" ]
