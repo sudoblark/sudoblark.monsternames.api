@@ -27,7 +27,8 @@ def handler(event, context):
         monstername_api = Monstername(first_name_table, last_name_table)
 
         dispatcher = {
-            "post": monstername_api.post
+            "post": monstername_api.post,
+            "get": monstername_api.get
         }
 
         http_method = event.get("httpMethod").lower()

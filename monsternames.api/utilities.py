@@ -4,6 +4,7 @@ import configparser
 import logging
 import os
 from typing import Union
+import random
 
 # Third-party libraries
 import boto3
@@ -75,7 +76,7 @@ class Monstername:
         LOGGER.debug("First name table: %s" % self.first_name_table)
         LOGGER.debug("Last name table: %s" % self.last_name_table)
 
-        self.post_dispatch = [
+        self.dispatch = [
             {
                 "field": "first_name",
                 "table": self.first_name_table
@@ -86,18 +87,44 @@ class Monstername:
             }
         ]
 
+    def get(self, payload: dict) -> [int, dict]:
+        """
+        Method to retrieve content in respective first_name/last_name tables
+
+        :param payload: The payload passed through to our lambda
+        :return: Response code and message denoting status of out GET request
+        """
+        response_message = {}
+        full_name = ""
+        for dispatch in self.dispatch:
+            if dispatch["table"] != "none":
+                table_exists = self._table_exists(dispatch["table"])
+                if table_exists:
+                    table = self.dynamo_db_client.Table(dispatch["table"])
+                    items = table.scan()["Items"]
+                    random_item = random.choice(items)['value']
+                    full_name += " " + random_item
+                    response_message[dispatch["field"]] = random_item
+        if full_name != "":
+            response_message["full_name"] = full_name.strip()
+            response_code = 200
+        else:
+            response_message["error"] = "Unable to find value entries in database"
+            response_code = 500
+        return response_code, response_message
+
     def post(self, payload: dict) -> [int, dict]:
         """
         Method to create new content in respective first_name/last_name tables
 
         :param payload: The payload passed through to our lambda
-        :return: Response code and message denoting status of our post request
+        :return: Response code and message denoting status of our POST request
         """
         response_message = {}
         LOGGER.debug("Payload as follows: %s" % payload)
         unable_to_insert = False
 
-        for dispatch in self.post_dispatch:
+        for dispatch in self.dispatch:
             if (dispatch["field"] in payload.keys()) & (dispatch["table"] != "none") & (not unable_to_insert):
                 table, error = self._get_or_create_table(dispatch["table"])
                 if table is not None:
@@ -123,6 +150,21 @@ class Monstername:
         response_code = 400 if unable_to_insert else 200
         return response_code, response_message
 
+    def _table_exists(self, table_name: str) -> bool:
+        """
+        Method to determine if a given table exists
+
+        :param table_name: Name of table to check
+        :return: True if table exists, else false
+        """
+        existing_tables = list(self.dynamo_db_client.tables.all())
+        table_exists = False
+        for table in existing_tables:
+            if table.name == table_name:
+                table_exists = True
+                break
+        return table_exists
+
     def _get_or_create_table(self, table_name: str) -> Union[any, None]:
         """
         Method to either retrieve given table name, or if it does not exist create it.
@@ -130,13 +172,8 @@ class Monstername:
         :param table_name: Name of table to get or create
         :return: Reference to the table object, or None if errors were encountered
         """
-        existing_tables = list(self.dynamo_db_client.tables.all())
-        table_exists = False
         error = ""
-        for table in existing_tables:
-            if table.name == table_name:
-                table_exists = True
-                break
+        table_exists = self._table_exists(table_name)
         if table_exists:
             table = self.dynamo_db_client.Table(table_name)
         else:
