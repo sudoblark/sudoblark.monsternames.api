@@ -33,6 +33,7 @@ services:
       AWS_ACCESS_KEY_ID: 'DUMMYIDEXAMPLE'
       AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
       AWS_DEFAULT_REGION: 'eu-west-1'
+      LOG_LEVEL: DEBUG
 
 networks:
   monsternames:

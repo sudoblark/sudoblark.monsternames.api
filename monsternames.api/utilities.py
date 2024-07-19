@@ -2,13 +2,34 @@
 from dataclasses import dataclass
 import configparser
 import logging
+import os
 
 # Third-party libraries
 import boto3
 from botocore.exceptions import ClientError
 
-LOGGER = logging.getLogger(__name__)
-logging.basicConfig(format="%(asctime)s %(filename)s: %(levelname)s: %(message)s", level="INFO")
+# Uses the default lambda logger
+LOGGER = logging.getLogger()
+FORMAT = "%(asctime)s - %(module)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
+LOGGER.debug("Attempting to find LOG_LEVEL environment variable to set logging level.")
+if "LOG_LEVEL" in os.environ.keys():
+    logging_level = os.environ.get("LOG_LEVEL").upper()
+    LOGGER.debug(
+        "Found LOG_LEVEL %s in environment variables, attempting to set log level."
+        % logging_level
+    )
+    try:
+        logging.basicConfig(level=logging.getLevelName(logging_level), format=FORMAT)
+        LOGGER.setLevel(logging.getLevelName(logging_level))
+    except ValueError:
+        LOGGER.error(
+            "Unknown logging level %s provided, defaulting to INFO." % logging_level
+        )
+        LOGGER.setLevel(logging.getLevelName("INFO"))
+else:
+    LOGGER.setLevel(logging.getLevelName("INFO"))
 
 
 @dataclass
@@ -31,8 +52,8 @@ class ConfigParser:
 
 @dataclass
 class Monstername:
-    first_name_table: str = None
-    last_name_table: str = None
+    first_name_table: str
+    last_name_table: str
     table_attributes = [
         {
             "AttributeName": "value",
@@ -58,10 +79,10 @@ class Monstername:
         :return: Response code and message denoting status of our post request
         """
         response_dict = {}
-        if "first_name" in payload.keys():
+        if "first_name" in payload.keys() & self.first_name_table != "none":
             self._create_table(self.first_name_table)
             response_dict["first_name"] = payload
-        if "last_name" in payload.keys():
+        if "last_name" in payload.keys() & self.last_name_table != "none":
             self._create_table(self.last_name_table)
             response_dict["last_name"] = payload
 

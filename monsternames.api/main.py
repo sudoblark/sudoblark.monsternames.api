@@ -21,8 +21,8 @@ def handler(event, context):
     }
 
     if endpoint in config_parser.config.sections():
-        first_name_table = config_parser.config[endpoint].get("first_table_name", None)
-        last_name_table = config_parser.config[endpoint].get("last_table_name", None)
+        first_name_table = config_parser.config[endpoint]["first_name_table"]
+        last_name_table = config_parser.config[endpoint]["last_name_table"]
 
         monstername_api = Monstername(first_name_table, last_name_table)
 

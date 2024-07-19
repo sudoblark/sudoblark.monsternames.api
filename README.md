@@ -33,6 +33,7 @@
         <li><a href="#manually-testing-the-containerised-lambda">Manually testing the containerised lambda</a></li>
       </ul>
     </li>
+    <li><a href="#automated-tests">Environment Variables</a></li>
     <li><a href="#automated-tests">Automated tests</a></li>
     <li><a href="#ci-cd-setup">CI/CD Setup</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -144,6 +145,27 @@ Where:
 ```
 "{\"first_name\":\"fluffy\",\"last_name\":\"brown\"}"
 ```
+
+3. For environment variables, these may be set in the docker-compose.yml file for testing purposes.
+
+
+4. Logs may be tailed as follows:
+
+```bash
+brew install jq
+ID=$(docker ps --format '{"ID":"{{ .ID }}", "Image": "{{ .Image }}", "Names":"{{ .Names }}"}' | grep monsternamesapi | jq -r .ID)
+docker logs -f $ID
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- Environment Variables -->
+## Environment Variables
+The following environment variables may be used to configure the container:
+
+| Env var   | Permissible values                       | Description                                              |
+|-----------|------------------------------------------|----------------------------------------------------------|
+| LOG_LEVEL | NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL | Log level for the logger inside the container to utilise |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
