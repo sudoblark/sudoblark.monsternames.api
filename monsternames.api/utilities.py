@@ -75,6 +75,17 @@ class Monstername:
         LOGGER.debug("First name table: %s" % self.first_name_table)
         LOGGER.debug("Last name table: %s" % self.last_name_table)
 
+        self.post_dispatch = [
+            {
+                "field": "first_name",
+                "table": self.first_name_table
+            },
+            {
+                "field": "last_name",
+                "table": self.last_name_table
+            }
+        ]
+
     def post(self, payload: dict) -> [int, dict]:
         """
         Method to create new content in respective first_name/last_name tables
@@ -82,21 +93,35 @@ class Monstername:
         :param payload: The payload passed through to our lambda
         :return: Response code and message denoting status of our post request
         """
-        response_dict = {}
+        response_message = {}
         LOGGER.debug("Payload as follows: %s" % payload)
-        if ("first_name" in payload.keys()) & (self.first_name_table != "none"):
-            table = self._get_or_create_table(self.first_name_table)
-            if table is not None:
-                response_dict["first_name"] = payload.get("first_name")
-        if ("last_name" in payload.keys()) & (self.last_name_table != "none"):
-            table = self._get_or_create_table(self.last_name_table)
-            if table is not None:
-                response_dict["last_name"] = payload.get("last_name")
+        unable_to_insert = False
 
-        if len(response_dict.keys()) > 0:
-            return 200, response_dict
-        else:
-            return 400, {"error": "Unable to create table"}
+        for dispatch in self.post_dispatch:
+            if (dispatch["field"] in payload.keys()) & (dispatch["table"] != "none") & (not unable_to_insert):
+                table, error = self._get_or_create_table(dispatch["table"])
+                if table is not None:
+                    put_response = table.put_item(
+                        Item={
+                            "value": payload[dispatch["field"]]
+                        }
+                    )
+                    unable_to_insert = not put_response['ResponseMetadata']['HTTPStatusCode'] == 200
+            if unable_to_insert:
+                error_message = f"Unable to insert {payload[dispatch['field']]} as valid {dispatch['field']}."
+                if "error" in response_message.keys():
+                    error_message = response_message["error"] + " " + error_message
+                response_message["error"] = error_message
+                # Stop processing further fields if one fails to insert
+                break
+            else:
+                success_message = f"Successfully inserted {payload[dispatch['field']]} as valid {dispatch['field']}."
+                if "message" in response_message.keys():
+                    success_message = response_message["message"] + " " + success_message
+                response_message["message"] = success_message
+
+        response_code = 400 if unable_to_insert else 200
+        return response_code, response_message
 
     def _get_or_create_table(self, table_name: str) -> Union[any, None]:
         """
@@ -107,6 +132,7 @@ class Monstername:
         """
         existing_tables = list(self.dynamo_db_client.tables.all())
         table_exists = False
+        error = ""
         for table in existing_tables:
             if table.name == table_name:
                 table_exists = True
@@ -114,8 +140,8 @@ class Monstername:
         if table_exists:
             table = self.dynamo_db_client.Table(table_name)
         else:
-            table = self._create_table(table_name)
-        return table
+            table, error = self._create_table(table_name)
+        return table, error
 
     def _create_table(self, table_name: str) -> Union[any, None]:
         """
@@ -125,6 +151,7 @@ class Monstername:
         :return: The newly created table, or None if we encountered errors
         """
         table = None
+        error = ""
         try:
             new_table = self.dynamo_db_client.create_table(
                 TableName=table_name,
@@ -137,4 +164,5 @@ class Monstername:
         except ClientError as err:
             LOGGER.error("Unable to create new table: %s", table_name)
             LOGGER.error("%s: %s", err.response["Error"]["Code"], err.response["Error"]["Message"])
-        return table
+            error = err.response["Error"]["Code"]
+        return table, error
