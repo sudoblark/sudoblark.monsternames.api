@@ -56,35 +56,25 @@ class ConfigParser:
 class Monstername:
     first_name_table: str
     last_name_table: str
-    table_attributes = [
-        {
-            "AttributeName": "value",
-            "AttributeType": "S"
-        }
-    ]
-    table_schema = [
-        {
-            "AttributeName": "value",
-            "KeyType": "HASH"
-        }
-    ]
+    table_attributes = [{"AttributeName": "value", "AttributeType": "S"}]
+    table_schema = [{"AttributeName": "value", "KeyType": "HASH"}]
     billing_mode = "PAY_PER_REQUEST"
 
     def __post_init__(self):
-        dynamodb_endpoint = os.environ.get("DYNAMODB_ENDPOINT") if "DYNAMODB_ENDPOINT" in os.environ.keys() else None
-        self.dynamo_db_client = boto3.resource('dynamodb', endpoint_url=dynamodb_endpoint)
+        dynamodb_endpoint = (
+            os.environ.get("DYNAMODB_ENDPOINT")
+            if "DYNAMODB_ENDPOINT" in os.environ.keys()
+            else None
+        )
+        self.dynamo_db_client = boto3.resource(
+            "dynamodb", endpoint_url=dynamodb_endpoint
+        )
         LOGGER.debug("First name table: %s" % self.first_name_table)
         LOGGER.debug("Last name table: %s" % self.last_name_table)
 
         self.dispatch = [
-            {
-                "field": "first_name",
-                "table": self.first_name_table
-            },
-            {
-                "field": "last_name",
-                "table": self.last_name_table
-            }
+            {"field": "first_name", "table": self.first_name_table},
+            {"field": "last_name", "table": self.last_name_table},
         ]
 
     def get(self, payload: dict) -> [int, dict]:
@@ -102,7 +92,7 @@ class Monstername:
                 if table_exists:
                     table = self.dynamo_db_client.Table(dispatch["table"])
                     items = table.scan()["Items"]
-                    random_item = random.choice(items)['value']
+                    random_item = random.choice(items)["value"]
                     full_name += " " + random_item
                     response_message[dispatch["field"]] = random_item
         if full_name != "":
@@ -125,15 +115,19 @@ class Monstername:
         unable_to_insert = False
 
         for dispatch in self.dispatch:
-            if (dispatch["field"] in payload.keys()) & (dispatch["table"] != "none") & (not unable_to_insert):
+            if (
+                (dispatch["field"] in payload.keys())
+                & (dispatch["table"] != "none")
+                & (not unable_to_insert)
+            ):
                 table, error = self._get_or_create_table(dispatch["table"])
                 if table is not None:
                     put_response = table.put_item(
-                        Item={
-                            "value": payload[dispatch["field"]]
-                        }
+                        Item={"value": payload[dispatch["field"]]}
                     )
-                    unable_to_insert = not put_response['ResponseMetadata']['HTTPStatusCode'] == 200
+                    unable_to_insert = (
+                        not put_response["ResponseMetadata"]["HTTPStatusCode"] == 200
+                    )
             if unable_to_insert:
                 error_message = f"Unable to insert {payload[dispatch['field']]} as valid {dispatch['field']}."
                 if "error" in response_message.keys():
@@ -144,7 +138,9 @@ class Monstername:
             else:
                 success_message = f"Successfully inserted {payload[dispatch['field']]} as valid {dispatch['field']}."
                 if "message" in response_message.keys():
-                    success_message = response_message["message"] + " " + success_message
+                    success_message = (
+                        response_message["message"] + " " + success_message
+                    )
                 response_message["message"] = success_message
 
         response_code = 400 if unable_to_insert else 200
@@ -194,12 +190,16 @@ class Monstername:
                 TableName=table_name,
                 KeySchema=self.table_schema,
                 AttributeDefinitions=self.table_attributes,
-                BillingMode=self.billing_mode
+                BillingMode=self.billing_mode,
             )
             new_table.wait_until_exists()
             table = new_table
         except ClientError as err:
             LOGGER.error("Unable to create new table: %s", table_name)
-            LOGGER.error("%s: %s", err.response["Error"]["Code"], err.response["Error"]["Message"])
+            LOGGER.error(
+                "%s: %s",
+                err.response["Error"]["Code"],
+                err.response["Error"]["Message"],
+            )
             error = err.response["Error"]["Code"]
         return table, error

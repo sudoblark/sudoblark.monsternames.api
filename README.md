@@ -28,12 +28,13 @@
     <li>
       <a href="#local-development">Local development</a>
       <ul>
+        <li><a href="#pre-commit-hooks">Pre-commit hooks</a></li>
         <li><a href="#updating-the-configuration-file">Updating the configuration file</a></li>
         <li><a href="#updating-the-containerised-lambda">Updating the containerised lambda</a></li>
         <li><a href="#manually-testing-the-containerised-lambda">Manually testing the containerised lambda</a></li>
       </ul>
     </li>
-    <li><a href="#automated-tests">Environment Variables</a></li>
+    <li><a href="#environment-variables">Environment Variables</a></li>
     <li><a href="#automated-tests">Automated tests</a></li>
     <li><a href="#ci-cd-setup">CI/CD Setup</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -110,6 +111,27 @@ the configuration file.
 
 All instructions, unless otherwise stated, were only tested on MacOS.
 
+### Pre-commit hooks
+Pre-commit hooks are used to ensure appropriate formatting of code. To utilise:
+
+1. Install pre-commit if you have not done so already:
+
+```bash
+pip3 install pre-commit
+```
+
+2. Install the hooks
+
+```bash
+pre-commit install
+```
+
+3. Do a pre-emptive run against all files:
+
+```bash
+pre-commit run --all-files
+```
+
 ### Updating the configuration file
 Simply add new section(s) to the `config.ini` file to denote new endpoints.
 
@@ -165,9 +187,9 @@ The following environment variables may be used to configure the container:
 
 | Env var           | Permissible values                       | Description                                                                                                                         |
 |-------------------|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| CONFIG_FILE       | A valid file path                        | Points the lambda to its configuration file as outlined in the "Updating the configuration file" section of this README.            | 
+| CONFIG_FILE       | A valid file path                        | Points the lambda to its configuration file as outlined in the "Updating the configuration file" section of this README.            |
 | LOG_LEVEL         | NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL | Log level for the logger inside the container to utilise, if blank will default to INFO.                                            |
-| 
+|
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -211,7 +233,7 @@ Copyright (c) 2023, Sudoblark Ltd
 All rights reserved.
 
 This source code is licensed under the BSD 3 clause license found in the
-LICENSE file in the root directory of this source tree. 
+LICENSE file in the root directory of this source tree.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
