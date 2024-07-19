@@ -1,22 +1,22 @@
 version: '3.5'
 
 services:
-  dynamo:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     container_name: dynamodb-local
-    image: amazon/dynamodb-local
+    image: amazon/dynamodb-local:latest
     networks:
       - monsternames
     ports:
       - '8000:8000'
     volumes:
       - "./docker/dynamodb:/home/dynamodblocal/data"
-
+    working_dir: /home/dynamodblocal
   monsternames:
     depends_on:
-      - dynamo
+      - dynamodb-local
     links:
-      - dynamo
+      - dynamodb-local
     networks:
       - monsternames
     build:
@@ -29,11 +29,13 @@ services:
         source: ./config.ini
         target: /home/config.ini
     environment:
-      config_file: '/home/config.ini'
-      AWS_ACCESS_KEY_ID: 'DUMMYIDEXAMPLE'
-      AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
-      AWS_DEFAULT_REGION: 'eu-west-1'
+      CONFIG_FILE: /home/config.ini
       LOG_LEVEL: DEBUG
+      # Only required for local docker-compose. NOT USED when deployed to AWS.
+      AWS_ACCESS_KEY_ID: DUMMYIDEXAMPLE
+      AWS_SECRET_ACCESS_KEY: DUMMYEXAMPLEKEY
+      AWS_DEFAULT_REGION: eu-west-1
+      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
 
 networks:
   monsternames:

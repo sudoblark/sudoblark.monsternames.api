@@ -9,7 +9,7 @@ from utilities import LOGGER
 
 # Required as entrypoint for lambda container
 def handler(event, context):
-    config_path = os.environ.get("config_file")
+    config_path = os.environ.get("CONFIG_FILE")
     LOGGER.info("config_path set to %s" % config_path)
     endpoint = event["path"]
 
