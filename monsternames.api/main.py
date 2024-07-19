@@ -1,14 +1,24 @@
 # Standard libraries
 import json
 import os
+from typing import Dict
 # Our libraries
 from utilities import ConfigParser
 from utilities import Monstername
 from utilities import LOGGER
 
 
-# Required as entrypoint for lambda container
-def handler(event, context):
+def handler(event: any, context: any) -> Dict:
+    """
+    Main entry point for the lambda proper.
+
+    :param event: Param auto-passed through by the lambda, containing payload etc.
+    See https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-event for more info.
+
+    :param context: Param auto-passed through by the lambda, has info on invocation, function and environment.
+    See https://docs.aws.amazon.com/lambda/latest/dg/python-context.html for more info.
+    :return:
+    """
     config_path = os.environ.get("CONFIG_FILE")
     LOGGER.info("config_path set to %s" % config_path)
     endpoint = event["path"]
@@ -40,7 +50,6 @@ def handler(event, context):
                 "error": f"'{http_method}' method not supported for endpoint '{endpoint}'"
             }
         else:
-
             status_code, response = dispatcher[http_method](payload_dictionary)
 
     return {
