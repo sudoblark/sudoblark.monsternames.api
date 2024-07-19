@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   dynamo:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
     container_name: dynamodb-local
     image: amazon/dynamodb-local
     networks:

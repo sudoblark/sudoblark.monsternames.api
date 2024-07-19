@@ -163,9 +163,9 @@ docker logs -f $ID
 ## Environment Variables
 The following environment variables may be used to configure the container:
 
-| Env var   | Permissible values                       | Description                                              |
-|-----------|------------------------------------------|----------------------------------------------------------|
-| LOG_LEVEL | NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL | Log level for the logger inside the container to utilise |
+| Env var            | Permissible values                       | Description                                                                                                             |
+|--------------------|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| LOG_LEVEL          | NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL | Log level for the logger inside the container to utilise, if blank will default to INFO                                 |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

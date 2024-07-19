@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import configparser
 import logging
 import os
+from typing import Union
 
 # Third-party libraries
 import boto3
@@ -30,7 +31,6 @@ if "LOG_LEVEL" in os.environ.keys():
         LOGGER.setLevel(logging.getLevelName("INFO"))
 else:
     LOGGER.setLevel(logging.getLevelName("INFO"))
-
 
 @dataclass
 class ConfigParser:
@@ -69,7 +69,9 @@ class Monstername:
     billing_mode = "PAY_PER_REQUEST"
 
     def __post_init__(self):
-        self.dynamo_db_client = boto3.client('dynamodb')
+        self.dynamo_db_client = boto3.resource('dynamodb')
+        LOGGER.debug("First name table: %s" % self.first_name_table)
+        LOGGER.debug("Last name table: %s" % self.last_name_table)
 
     def post(self, payload: dict) -> [int, dict]:
         """
@@ -79,25 +81,29 @@ class Monstername:
         :return: Response code and message denoting status of our post request
         """
         response_dict = {}
-        if "first_name" in payload.keys() & self.first_name_table != "none":
-            self._create_table(self.first_name_table)
-            response_dict["first_name"] = payload
-        if "last_name" in payload.keys() & self.last_name_table != "none":
-            self._create_table(self.last_name_table)
-            response_dict["last_name"] = payload
+        LOGGER.debug("Payload as follows: %s" % payload)
+        if ("first_name" in payload.keys()) & (self.first_name_table != "none"):
+            table = self._create_table(self.first_name_table)
+            if table is not None:
+                response_dict["first_name"] = payload.get("first_name")
+        if ("last_name" in payload.keys()) & (self.last_name_table != "none"):
+            table = self._create_table(self.last_name_table)
+            if table is not None:
+                response_dict["last_name"] = payload.get("last_name")
 
-        if len(response_dict) > 0:
+        if len(response_dict.keys()) > 0:
             return 200, response_dict
         else:
             return 400, {"error": "Unable to create table"}
 
-    def _create_table(self, table_name: str) -> None:
+    def _create_table(self, table_name: str) -> Union[any, None]:
         """
         Helper method to create a table in DynamoDB if it does not exist
 
         :param table_name: The name of the table to create
         :return: The newly created table
         """
+        table = None
         try:
             new_table = self.dynamo_db_client.create_table(
                 TableName=table_name,
@@ -106,10 +112,12 @@ class Monstername:
                 BillingMode=self.billing_mode
             )
             new_table.wait_until_exists()
-
+            table = new_table
         except self.dynamo_db_client.exceptions.ResourceInUseException:
             LOGGER.debug("'%s' DynamoDB table already exists, skipping creation." % table_name)
             self.dynamo_db_client.describe_table(TableName=table_name)
         except ClientError as err:
             LOGGER.error("Unable to create new table: %s", table_name)
             LOGGER.error("%s: %s", err.response["Error"]["Code"], err.response["Error"]["Message"])
+
+        return table
