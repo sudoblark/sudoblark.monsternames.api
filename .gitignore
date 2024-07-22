@@ -2,3 +2,7 @@
 .idea/
 # Local DynamoDB instance
 **/dynamodb/**
+# Ruff
+.ruff_cache*
+# Virtual environment
+venv*

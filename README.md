@@ -228,10 +228,9 @@ make execute-behaviour-tests
 
 <!-- CI/CD -->
 ## CI/CD setup
-
-```mermaid
-TODO
-```
+CI is setup such that, on an open pull request:
+- Ruff is used to lint all Python files
+- Behavioural tests - as outlined in the <a href="#automated-tests">Automated Tests</a> section - are run
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
