@@ -64,6 +64,8 @@ files for the lambda itself to S3.
 * [ConfigParser](https://docs.python.org/3/library/configparser.html)
 * [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
 * [mermaid](https://mermaid.js.org)
+* [behave!](https://behave.readthedocs.io/en/latest/)
+* [makefile](https://www.gnu.org/software/make/manual/make.html)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -168,15 +170,21 @@ Where:
 "{\"first_name\":\"fluffy\",\"last_name\":\"brown\"}"
 ```
 
-3. For environment variables, these may be set in the docker-compose.yml file for testing purposes.
-
-
-4. Logs may be tailed as follows:
+3. Logs may be tailed as follows:
 
 ```bash
 brew install jq
 ID=$(docker ps --format '{"ID":"{{ .ID }}", "Image": "{{ .Image }}", "Names":"{{ .Names }}"}' | grep monsternamesapi | jq -r .ID)
 docker logs -f $ID
+```
+
+4. You can also query the database directly, for debugging purposes, as follows:
+
+```bash
+export AWS_ACCESS_KEY_ID=DUMMYEXAMPLE
+export AWS_SECRET_ACCESS_KEY=DUMMYEXAMPLEKEY
+export AWS_DEFAULT_REGION=eu-west-1
+aws dynamodb list-tables --endpoint-url http://localhost:8000
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -196,8 +204,24 @@ The following environment variables may be used to configure the container:
 <!-- Automated tests -->
 ## Automated tests
 
-```mermaid
-TODO
+There are Behave! feature tests setup to run behaviour tests, which tests:
+
+- POST to every api endpoint with 5 unique values
+- GET to every api endpoint between 5-10 times depending on underlying monster schema
+
+Said tests should be run via the `makefile` to ensure the appropriate containers are running beforehand. As such, to
+run behavioural tests simply follow the below commands:
+
+1. Install makefile
+
+```bash
+brew install make
+```
+
+2. Run tests
+
+```bash
+make execute-behaviour-tests
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

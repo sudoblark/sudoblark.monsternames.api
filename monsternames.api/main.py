@@ -22,6 +22,10 @@ def handler(event: any, context: any) -> Dict:
     """
     config_path = os.environ.get("CONFIG_FILE")
     LOGGER.info("config_path set to %s" % config_path)
+
+    if isinstance(event, str):
+        event = json.loads(event)
+
     endpoint = event["path"]
 
     config_parser = ConfigParser(config_path)
