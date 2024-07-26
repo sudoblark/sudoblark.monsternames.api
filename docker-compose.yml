@@ -2,20 +2,16 @@ version: '3.5'
 
 services:
   dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    command: "-jar DynamoDBLocal.jar"
     container_name: dynamodb-local
     image: amazon/dynamodb-local:latest
     networks:
       - monsternames
     ports:
       - '8000:8000'
-    volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
-    working_dir: /home/dynamodblocal
+
   monsternames:
     depends_on:
-      - dynamodb-local
-    links:
       - dynamodb-local
     networks:
       - monsternames
