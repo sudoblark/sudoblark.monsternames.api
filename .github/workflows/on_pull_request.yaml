@@ -6,6 +6,8 @@ env:
   AWS_DEFAULT_REGION: eu-west-2
   # Automatically generated token unique to this repo per workflow execution
   REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Explicitly provided token in ORG to access entire organisation
+  ORG_GITHUB_TOKEN: ${{ secrets.SUDOBLARK_GITHUB_TOKEN }}
 
 on: [pull_request]
 
@@ -83,5 +85,7 @@ jobs:
 
       - name: terraform plan
         uses: dflook/terraform-plan@v1
+        env:
+          GITHUB_TOKEN: ${{ env.REPO_GITHUB_TOKEN }}
         with:
           path: ${{ matrix.folder }}
