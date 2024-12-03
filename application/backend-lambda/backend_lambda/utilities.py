@@ -2,8 +2,10 @@
 from dataclasses import dataclass
 import configparser
 import logging
+from logging import Logger
 import os
 from typing import Union
+from typing import List
 import random
 
 # Third-party libraries
@@ -11,13 +13,13 @@ import boto3
 from botocore.exceptions import ClientError
 
 # Uses the default lambda logger
-LOGGER = logging.getLogger()
-FORMAT = "%(asctime)s - %(module)s - %(levelname)s - %(message)s"
+LOGGER: Logger = logging.getLogger()
+FORMAT: str = "%(asctime)s - %(module)s - %(levelname)s - %(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 LOGGER.debug("Attempting to find LOG_LEVEL environment variable to set logging level.")
 if "LOG_LEVEL" in os.environ.keys():
-    logging_level = os.environ.get("LOG_LEVEL").upper()
+    logging_level: str = os.environ.get("LOG_LEVEL").upper()
     LOGGER.debug(
         "Found LOG_LEVEL %s in environment variables, attempting to set log level."
         % logging_level
@@ -61,7 +63,7 @@ class Monstername:
     billing_mode = "PAY_PER_REQUEST"
 
     def __post_init__(self):
-        dynamodb_endpoint = (
+        dynamodb_endpoint: Union[str, None] = (
             os.environ.get("DYNAMODB_ENDPOINT")
             if "DYNAMODB_ENDPOINT" in os.environ.keys()
             else None
@@ -84,15 +86,15 @@ class Monstername:
         :param payload: The payload passed through to our lambda
         :return: Response code and message denoting status of out GET request
         """
-        response_message = {}
-        full_name = ""
+        response_message: dict = {}
+        full_name: str = ""
         for dispatch in self.dispatch:
             if dispatch["table"] != "none":
-                table_exists = self._table_exists(dispatch["table"])
+                table_exists: bool = self._table_exists(dispatch["table"])
                 if table_exists:
-                    table = self.dynamo_db_client.Table(dispatch["table"])
-                    items = table.scan()["Items"]
-                    random_item = random.choice(items)["value"]
+                    table: str = self.dynamo_db_client.Table(dispatch["table"])
+                    items: List[dict] = table.scan()["Items"]
+                    random_item: str = random.choice(items)["value"]
                     full_name += " " + random_item
                     response_message[dispatch["field"]] = random_item
         if full_name != "":
@@ -110,9 +112,9 @@ class Monstername:
         :param payload: The payload passed through to our lambda
         :return: Response code and message denoting status of our POST request
         """
-        response_message = {}
+        response_message: dict = {}
         LOGGER.debug("Payload as follows: %s" % payload)
-        unable_to_insert = False
+        unable_to_insert: bool = False
 
         for dispatch in self.dispatch:
             if (
@@ -122,26 +124,30 @@ class Monstername:
             ):
                 table, error = self._get_or_create_table(dispatch["table"])
                 if table is not None:
-                    put_response = table.put_item(
+                    put_response: dict = table.put_item(
                         Item={"value": payload[dispatch["field"]]}
                     )
-                    unable_to_insert = (
+                    unable_to_insert: bool = (
                         not put_response["ResponseMetadata"]["HTTPStatusCode"] == 200
                     )
-            if unable_to_insert:
-                error_message = f"Unable to insert {payload[dispatch['field']]} as valid {dispatch['field']}."
-                if "error" in response_message.keys():
-                    error_message = response_message["error"] + " " + error_message
-                response_message["error"] = error_message
-                # Stop processing further fields if one fails to insert
-                break
-            else:
-                success_message = f"Successfully inserted {payload[dispatch['field']]} as valid {dispatch['field']}."
-                if "message" in response_message.keys():
-                    success_message = (
-                        response_message["message"] + " " + success_message
-                    )
-                response_message["message"] = success_message
+
+                attempted_value: str = payload[dispatch["field"]]
+                attempted_field: str = dispatch["field"]
+
+                if unable_to_insert:
+                    error_message: str = f"Unable to insert '{attempted_value}' as valid '{attempted_field}'."
+                    if "error" in response_message.keys():
+                        error_message: str = response_message["error"] + " " + error_message
+                    response_message["error"] = error_message
+                    # Stop processing further fields if one fails to insert
+                    break
+                else:
+                    success_message: str = f"Successfully inserted '{attempted_value}' as valid '{attempted_field}'."
+                    if "message" in response_message.keys():
+                        success_message: str = (
+                            response_message["message"] + " " + success_message
+                        )
+                    response_message["message"] = success_message
 
         response_code = 400 if unable_to_insert else 200
         return response_code, response_message
@@ -168,8 +174,8 @@ class Monstername:
         :param table_name: Name of table to get or create
         :return: Reference to the table object, or None if errors were encountered
         """
-        error = ""
-        table_exists = self._table_exists(table_name)
+        error: str = ""
+        table_exists: bool = self._table_exists(table_name)
         if table_exists:
             table = self.dynamo_db_client.Table(table_name)
         else:
@@ -183,8 +189,8 @@ class Monstername:
         :param table_name: The name of the table to create
         :return: The newly created table, or None if we encountered errors
         """
-        table = None
-        error = ""
+        table: Union[any, None] = None
+        error: str = ""
         try:
             new_table = self.dynamo_db_client.create_table(
                 TableName=table_name,
