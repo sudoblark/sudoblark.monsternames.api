@@ -232,3 +232,6 @@ terraform.rc
 
 # Temp dev files
 dev_scratchpad/*
+
+# Lambda zip files meant to be created by pipelines
+**/lambda.zip
