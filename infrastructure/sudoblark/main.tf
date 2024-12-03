@@ -20,6 +20,5 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-west-2"
-  profile = "sudoblark"
+  region = "eu-west-2"
 }
