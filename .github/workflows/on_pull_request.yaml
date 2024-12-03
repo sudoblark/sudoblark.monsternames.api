@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         folder: [
-          "./infrastructure/modules/api_gateway_restapi",
+          "./infrastructure/modules/api_gateway_rest_api",
           "./infrastructure/modules/lambda",
           "./infrastructure/sudoblark"
         ]
@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         folder: [
-          "./infrastructure/modules/api_gateway_restapi",
+          "./infrastructure/modules/api_gateway_rest_api",
           "./infrastructure/modules/lambda",
           "./infrastructure/sudoblark"
         ]
