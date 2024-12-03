@@ -1,0 +1,462 @@
+# Copyright (c) 2023, Sudoblark Ltd
+#
+# All rights reserved.
+#
+# This source code is licensed under the BSD 3 clause license found in the
+# LICENSE file in the root directory of this source tree.
+
+openapi: 3.0.1
+info:
+  title: Monsternames - OpenAPI 3.0
+  description: |-
+    This is a relatively simple RESTAPI, based on the OpenAPI 3.0 specification, which generates pseudo-random names for
+    common fantasy monsters.
+  license:
+    name: BSD 3 clause
+    url: https://github.com/sudoblark/monsternames.open-api/blob/main/LICENSE.txt
+  version: 1.1.0
+externalDocs:
+  description: Source Code
+  url: https://github.com/sudoblark/sudoblark.monsternames.api
+servers:
+  - url: https://monsternames-api.com/api/v1.0
+tags:
+  - name: goatmen
+    description: Names themed on cute fluffy animals
+  - name: goblin
+    description: Names themed on washed out wrestlers/average blokes
+  - name: ogre
+    description: Names themed on cavemen like speech
+  - name: orc
+    description: Names themed on {noun} + {silly moniker}
+  - name: skeleton
+    description: Names themed on 18th Century British Gentlemen
+  - name: troll
+    description: Names themed on a Scandinavian twist
+paths:
+  /goatmen:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - goatmen
+      requestBody:
+        description: Add first name
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirstNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - goatmen
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstName"
+
+  /goblin:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - goblin
+      requestBody:
+        description: Add first and/or last name
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/FirstNameModel"
+                - $ref: "#/components/schemas/LastNameModel"
+                - $ref: "#/components/schemas/FirstAndLastNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+              last_name:
+                $ref: "#/components/examples/LastName"
+              first_and_last_name:
+                $ref: "#/components/examples/FirstAndLastName"
+
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstAndLastName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - goblin
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstAndLastName"
+
+  /ogre:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - ogre
+      requestBody:
+        description: Add first name
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirstNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - ogre
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstName"
+
+  /orc:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - orc
+      requestBody:
+        description: Add first and/or last name
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/FirstNameModel"
+                - $ref: "#/components/schemas/LastNameModel"
+                - $ref: "#/components/schemas/FirstAndLastNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+              last_name:
+                $ref: "#/components/examples/LastName"
+              first_and_last_name:
+                $ref: "#/components/examples/FirstAndLastName"
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstAndLastName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - orc
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstAndLastName"
+
+  /skeleton:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - skeleton
+      requestBody:
+        description: Add first and/or last name
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/FirstNameModel"
+                - $ref: "#/components/schemas/LastNameModel"
+                - $ref: "#/components/schemas/FirstAndLastNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+              last_name:
+                $ref: "#/components/examples/LastName"
+              first_and_last_name:
+                $ref: "#/components/examples/FirstAndLastName"
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstAndLastName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - skeleton
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstAndLastName"
+
+  /troll:
+    post:
+      summary: Add pseudo-random name options
+      security:
+        - api_key: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      tags:
+        - troll
+      requestBody:
+        description: Add first and/or last name
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/FirstNameModel"
+                - $ref: "#/components/schemas/LastNameModel"
+                - $ref: "#/components/schemas/FirstAndLastNameModel"
+            examples:
+              first_name:
+                $ref: "#/components/examples/FirstName"
+              last_name:
+                $ref: "#/components/examples/LastName"
+              first_and_last_name:
+                $ref: "#/components/examples/FirstAndLastName"
+      responses:
+        "200":
+          $ref: "#/components/responses/200PostFirstAndLastName"
+        "400":
+          $ref: "#/components/responses/400PostInvalidBody"
+        "409":
+          $ref: "#/components/responses/409PostAlreadyExists"
+
+    get:
+      summary: Retrieve a pseudo-random name
+      tags:
+        - troll
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
+        type: "aws_proxy"
+        passthroughBehavior : "when_no_match"
+      responses:
+        "200":
+          $ref: "#/components/responses/200GetFirstAndLastName"
+
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "x-api-key"
+    in: "header"
+
+components:
+  examples:
+    FirstName:
+      summary: Add a new first name
+      value:
+        first_name: Barnaby
+    LastName:
+      summary: Add a new last name
+      value:
+        last_name: The brass dragon
+    FirstAndLastName:
+      summary: Add a new first and last name
+      value:
+        first_name: Barnaby
+        last_name: The brass dragon
+  schemas:
+    ErrorModel:
+      type: object
+      required:
+      - error
+      - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    FirstNameModel:
+      type: object
+      required:
+      - first_name
+      properties:
+        first_name:
+          type: string
+
+    LastNameModel:
+      type: object
+      required:
+      - last_name
+      properties:
+        last_name:
+          type: string
+
+    FirstAndLastNameModel:
+      type: object
+      required:
+      - first_name
+      - last_name
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+
+  responses:
+    200GetFirstName:
+      description: "Successful response"
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - first_name
+            - full_name
+            properties:
+              first_name:
+                type: string
+              full_name:
+                type: string
+
+    200PostFirstName:
+      description: "Successful response"
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - first_name
+            - message
+            properties:
+              first_name:
+                type: string
+              message:
+                type: string
+
+    200GetFirstAndLastName:
+      description: "Successful response"
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - first_name
+            - last_name
+            - full_name
+            properties:
+              first_name:
+                type: string
+              last_name:
+                type: string
+              full_name:
+                type: string
+
+    200PostFirstAndLastName:
+      description: "Successful response"
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - message
+            properties:
+              first_name:
+                type: string
+              last_name:
+                type: string
+              message:
+                type: string
+
+    400PostInvalidBody:
+      description: "Invalid body in POST"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorModel"
+
+    409PostAlreadyExists:
+      description: "Duplicate record"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorModel"

@@ -1,0 +1,38 @@
+name: Terraform apply on merge to main
+
+env:
+  TERRAFORM_PATH: sudoblark
+  AWS_ACCESS_KEY_ID: ${{ secrets.SUDOBLARK_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SUDOBLARK_AWS_ACCESS_KEY_VALUE }}
+  AWS_DEFAULT_REGION: eu-west-2
+  # Automatically generated token unique to this repo per workflow execution
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  apply:
+    name: Terraform apply
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: zip lambdas
+        run: |
+          cd application/backend-lambda
+              zip lambda.zip backend_lambda/ -r
+              zip lambda.zip config.ini -r
+              mkdir src
+              mv lambda.zip src
+
+      - name: terraform apply
+        uses: dflook/terraform-apply@v1
+        with:
+          path: ${{ env.TERRAFORM_PATH }}
+          auto_approve: true

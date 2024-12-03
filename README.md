@@ -8,7 +8,7 @@
 <h3 align="center">monsternames.api</h3>
 
   <p align="center">
-    Containerised lambda, and configuration, for backend of monsternames api.
+    Containerised lambda, and configuration, for monsternames api.
   </p>
 </div>
 
@@ -30,7 +30,6 @@
         <li><a href="#pre-commit-hooks">Pre-commit hooks</a></li>
         <li><a href="#updating-the-configuration-file">Updating the configuration file</a></li>
         <li><a href="#updating-the-containerised-lambda">Updating the containerised lambda</a></li>
-        <li><a href="#manually-testing-the-containerised-lambda">Manually testing the containerised lambda</a></li>
       </ul>
     </li>
     <li><a href="#environment-variables">Environment Variables</a></li>
@@ -46,10 +45,8 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-This repo defines our containerised lambda for the API backend of monsternames.
-
-Furthermore - via CI/CD - it also published said backend to AWS, in addition to uploading configuration
-files for the lambda itself to S3.
+This repo defines the monsternames.api in its entirety... both application
+and Infrastructure code.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -57,8 +54,6 @@ files for the lambda itself to S3.
 
 ### Built With
 
-* [Docker](https://hub.docker.com)
-* [Docker compose](https://docs.docker.com/compose/)
 * [DynamoDB](https://aws.amazon.com/dynamodb/)
 * [ConfigParser](https://docs.python.org/3/library/configparser.html)
 * [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
@@ -98,7 +93,7 @@ flowchart
 ```
 
 2. Make changes as appropriate as per the LOCAL DEVELOPMENT section.
-3. Test your changes using the Behave! testing framework locally.
+3. Test your changes locally.
 4. Submit a pull request.
 5. Ensure automated checks pass, go through usual peer-review process.
 6. Merge to main.
@@ -134,7 +129,7 @@ pre-commit run --all-files
 ```
 
 ### Updating the configuration file
-Simply add new section(s) to the `config.ini` file to denote new endpoints.
+Simply add new section(s) to the `application/backend-lambda/config.ini` file to denote new endpoints.
 
 Endpoints may define the following attributes:
 
@@ -143,48 +138,17 @@ Endpoints may define the following attributes:
 | first_name_table | Defines DynamoDB table to lookup for first names. If omitted, these are excluded from full_name concatenation. |
 | last_name_table  | Defines DynamoDB table to lookup for last names. If omitted, these are excluded from full_name concatenation.  |
 
-### Updating the containerised lambda
+### Updating the lambda
 
-The lambdas main entrypoint is `handler` in `monsternames.api\main`. It also uses helper classes in `monsternames.api\utilities` to generalise and simplify as much as possible.
+The lambdas main entrypoint is `handler` in `application\backend-lambda\backend_lambda\main.py`.
+It also uses helper classes in `application\backend-lambda\backend_lambda\utilities.py` to generalise and
+simplify as much as possible.
 
-Simply update code as appropriate then move on to manual then automated testing.
+Simply update code as appropriate, then move on to manual then automated testing.
 
-### Manually testing the containerised lambda
-Simply build and run the container, with a localised DynamoDB backend, using docker-compose.
+### Updating the API
 
-1. `docker-compose up` will run a local DynamoDB instance, and monsternames container, on the same network.
-
-2. You may then send test events to the container as follows:
-
-```shell
-curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"path": "/endpoint", "httpMethod": "METHOD", "Body": "PAYLOAD"}'
-```
-
-Where:
-- "/endpoint" is a valid endpoint as per the configuration file
-- "METHOD" is the HTTP method of our request, valid values are as per the open-api specification.
-- "PAYLOAD" is the payload of a POST request. For example:
-
-```
-"{\"first_name\":\"fluffy\",\"last_name\":\"brown\"}"
-```
-
-3. Logs may be tailed as follows:
-
-```bash
-brew install jq
-ID=$(docker ps --format '{"ID":"{{ .ID }}", "Image": "{{ .Image }}", "Names":"{{ .Names }}"}' | grep monsternamesapi | jq -r .ID)
-docker logs -f $ID
-```
-
-4. You can also query the database directly, for debugging purposes, as follows:
-
-```bash
-export AWS_ACCESS_KEY_ID=DUMMYEXAMPLE
-export AWS_SECRET_ACCESS_KEY=DUMMYEXAMPLEKEY
-export AWS_DEFAULT_REGION=eu-west-1
-aws dynamodb list-tables --endpoint-url http://localhost:8000
-```
+The definition of the API is contained, in its entirety, in `application\open_api_definitions\monsternames.yaml`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -202,25 +166,7 @@ The following environment variables may be used to configure the container:
 <!-- Automated tests -->
 ## Automated tests
 
-There are Behave! feature tests setup to run behaviour tests, which tests:
-
-- POST to every api endpoint with 5 unique values
-- GET to every api endpoint between 5-10 times depending on underlying monster schema
-
-Said tests should be run via the `makefile` to ensure the appropriate containers are running beforehand. As such, to
-run behavioural tests simply follow the below commands:
-
-1. Install makefile
-
-```bash
-brew install make
-```
-
-2. Run tests
-
-```bash
-make execute-behaviour-tests
-```
+TODO
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -228,7 +174,7 @@ make execute-behaviour-tests
 ## CI/CD setup
 CI is setup such that, on an open pull request:
 - Ruff is used to lint all Python files
-- Behavioural tests - as outlined in the <a href="#automated-tests">Automated Tests</a> section - are run
+-  Tests - as outlined in the <a href="#automated-tests">Automated Tests</a> section - are run
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
