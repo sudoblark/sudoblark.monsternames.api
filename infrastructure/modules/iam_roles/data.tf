@@ -10,9 +10,6 @@ locals {
   }
 }
 
-# Get current account
-data "aws_caller_identity" "current" {}
-
 # Lookup known KMS keys for easy reference across stack
 data "aws_kms_key" "known_keys" {
   for_each = local.known_kms_keys
