@@ -1,7 +1,7 @@
 name: Terraform apply on merge to main
 
 env:
-  TERRAFORM_PATH: sudoblark
+  TERRAFORM_PATH: infrastructure/sudoblark
   AWS_ACCESS_KEY_ID: ${{ secrets.SUDOBLARK_AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.SUDOBLARK_AWS_ACCESS_KEY_VALUE }}
   AWS_DEFAULT_REGION: eu-west-2

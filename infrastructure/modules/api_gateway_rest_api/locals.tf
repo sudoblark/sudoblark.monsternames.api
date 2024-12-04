@@ -30,7 +30,10 @@ locals {
       description = "    This is a relatively simple RESTAPI, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
       template_input = {
         backend_lambda_arn : data.aws_lambda_function.known_lambdas["backend-lambda"].arn,
-        aws_region_name : data.aws_region.current_region.name
+        aws_region_name : data.aws_region.current_region.name,
+        asset_bucket_name : local.known_buckets.assets.name,
+        swagger_index_path : "swagger_ui/index.html",
+        api_gateway_iam_role_arn : local.known_roles.api_gateway_iam_role_arn.arn
       }
       allowed_lambdas = [
         data.aws_lambda_function.known_lambdas["backend-lambda"].function_name,

@@ -13,13 +13,13 @@ info:
     common fantasy monsters.
   license:
     name: BSD 3 clause
-    url: https://github.com/sudoblark/monsternames.open-api/blob/main/LICENSE.txt
+    url: https://raw.githubusercontent.com/sudoblark/sudoblark.monsternames.api/refs/heads/main/LICENSE.txt
   version: 1.1.0
 externalDocs:
   description: Source Code
   url: https://github.com/sudoblark/sudoblark.monsternames.api
 servers:
-  - url: https://monsternames-api.com/api/v1.0
+  - url: https://monsternames.sudoblark.com
 tags:
   - name: goatmen
     description: Names themed on cute fluffy animals
@@ -34,6 +34,28 @@ tags:
   - name: troll
     description: Names themed on a Scandinavian twist
 paths:
+  /:
+    get:
+      summary: Show Swagger UI
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri: "arn:aws:apigateway:${aws_region_name}:s3:path//${asset_bucket_name}/${swagger_index_path}"
+        credentials: "${api_gateway_iam_role_arn}"
+        type: "aws"
+        passthroughBehavior : "when_no_match"
+        responses:
+          "default": {
+            "statusCode": "200",
+            "responseParameters": {
+              "method.response.header.Content-Type": "'text/html'"
+            }
+          }
+      responses:
+        "200":
+          headers:
+            Content-Type:
+              type: string
+
   /goatmen:
     post:
       summary: Add pseudo-random name options
@@ -308,7 +330,6 @@ paths:
           $ref: "#/components/responses/400PostInvalidBody"
         "409":
           $ref: "#/components/responses/409PostAlreadyExists"
-
     get:
       summary: Retrieve a pseudo-random name
       tags:

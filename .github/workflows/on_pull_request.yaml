@@ -20,8 +20,11 @@ jobs:
     strategy:
       matrix:
         folder: [
+          "./infrastructure/modules/additional_s3_files",
           "./infrastructure/modules/api_gateway_rest_api",
+          "./infrastructure/modules/iam_roles",
           "./infrastructure/modules/lambda",
+          "./infrastructure/modules/s3_bucket",
           "./infrastructure/sudoblark"
         ]
     name: Terraform validate for ${{ matrix.folder }}
@@ -40,8 +43,11 @@ jobs:
     strategy:
       matrix:
         folder: [
+          "./infrastructure/modules/additional_s3_files",
           "./infrastructure/modules/api_gateway_rest_api",
+          "./infrastructure/modules/iam_roles",
           "./infrastructure/modules/lambda",
+          "./infrastructure/modules/s3_bucket",
           "./infrastructure/sudoblark"
         ]
     name: Terraform lint for ${{ matrix.folder }}
