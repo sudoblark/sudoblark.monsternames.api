@@ -1,4 +1,4 @@
-name: Terraform apply on merge to main
+name: Deploy to account
 
 env:
   TERRAFORM_PATH: infrastructure/sudoblark
