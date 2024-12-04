@@ -52,9 +52,14 @@ paths:
           }
       responses:
         "200":
+          description: "Successful request"
+          content:
+            text/html:
+              schema:
+                type: string
           headers:
-            Content-Type:
-              type: string
+            "Content-Type":
+              $ref: '#/components/headers/Content-Type'
 
   /goatmen:
     post:
@@ -343,13 +348,19 @@ paths:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
 
-securityDefinitions:
-  api_key:
-    type: "apiKey"
-    name: "x-api-key"
-    in: "header"
-
 components:
+  headers:
+    Content-Type:
+      schema:
+        type: string
+        description: Type of content to return
+
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
+
   examples:
     FirstName:
       summary: Add a new first name
