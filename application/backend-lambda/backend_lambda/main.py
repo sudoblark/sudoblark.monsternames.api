@@ -13,6 +13,7 @@ The following environment variables are optional:
 import json
 import os
 from typing import Dict
+from typing import Union
 
 # Third-party libraries
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -32,6 +33,7 @@ BASE_LAMBDA_RESPONSE = {
     "headers": {"content-Type": "application/json"},
 }
 
+
 @event_source(data_class=APIGatewayProxyEvent)
 def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict:
     """
@@ -50,9 +52,9 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict:
 
     endpoint: str = event["path"]
     LOGGER.debug("Raw event: %s" % event)
-    payload_dictionary = json.loads(event["body"])
+    payload_event: Union[str, None] = event.get("body", None)
+    payload_dictionary: dict = json.loads(payload_event) if payload_event is not None else {}
     LOGGER.debug("Payload dictionary: %s" % payload_dictionary)
-
 
     config_parser: ConfigParser = ConfigParser(config_path)
 
