@@ -343,13 +343,13 @@ paths:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
 
-securityDefinitions:
-  api_key:
-    type: "apiKey"
-    name: "x-api-key"
-    in: "header"
-
 components:
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
+
   examples:
     FirstName:
       summary: Add a new first name
