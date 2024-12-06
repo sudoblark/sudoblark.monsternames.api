@@ -4,7 +4,8 @@ module "api_gateway" {
   environment      = var.environment
 
   depends_on = [
-    module.lambda
+    module.lambda,
+    module.application_registry
   ]
 
 }
