@@ -4,6 +4,7 @@ module "additional_s3_files" {
   environment      = var.environment
 
   depends_on = [
-    module.s3_bucket
+    module.s3_bucket,
+    module.application_registry
   ]
 }

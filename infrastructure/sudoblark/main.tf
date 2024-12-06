@@ -9,7 +9,6 @@ terraform {
     }
 
   }
-
   backend "s3" {
     bucket = "terraform-sudoblark"
     key    = "applications/monsternames.tfstate"
@@ -21,4 +20,23 @@ terraform {
 
 provider "aws" {
   region = "eu-west-2"
+  alias  = "applicationRegistry"
+
+  default_tags {
+    tags = {
+      environment = "production"
+      managed_by  = "sudoblark.monsternames.api"
+    }
+  }
+}
+
+provider "aws" {
+  region = "eu-west-2"
+
+  default_tags {
+    tags = merge({
+      environment = "production"
+      managed_by  = "sudoblark.monsternames.api"
+    }, module.application_registry.application_tag)
+  }
 }
