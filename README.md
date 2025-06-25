@@ -45,6 +45,14 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+[![Swagger UI](https://img.shields.io/badge/docs-Swagger%20UI-green?logo=swagger)](https://monsternames.sudoblark.com)
+[![CI](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yml/badge.svg)](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yml)
+[![CD](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/deploy.yaml/badge.svg)](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/deploy.yaml)
+[![Terraform Version](https://img.shields.io/badge/Terraform-1.7%2B-blueviolet?logo=terraform)](https://developer.hashicorp.com/terraform/)
+[![Serverless](https://img.shields.io/badge/infra-Serverless-informational?logo=aws-lambda)](https://github.com/sudoblark/sudoblark.monsternames.api)
+[![License](https://img.shields.io/github/license/sudoblark/sudoblark.monsternames.api)](https://github.com/sudoblark/sudoblark.monsternames.api/blob/main/LICENSE.txt)
+
+
 This repo defines the monsternames.api in its entirety... both application
 and Infrastructure code.
 
