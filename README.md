@@ -46,7 +46,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 [![Swagger UI](https://img.shields.io/badge/docs-Swagger%20UI-green?logo=swagger)](https://monsternames.sudoblark.com)
-[![CI](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yml/badge.svg)](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yml)
+[![CI](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yaml/badge.svg)](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/on_pull_request.yaml)
 [![CD](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/deploy.yaml/badge.svg)](https://github.com/sudoblark/sudoblark.monsternames.api/actions/workflows/deploy.yaml)
 [![Terraform Version](https://img.shields.io/badge/Terraform-1.7%2B-blueviolet?logo=terraform)](https://developer.hashicorp.com/terraform/)
 [![Serverless](https://img.shields.io/badge/infra-Serverless-informational?logo=aws-lambda)](https://github.com/sudoblark/sudoblark.monsternames.api)
