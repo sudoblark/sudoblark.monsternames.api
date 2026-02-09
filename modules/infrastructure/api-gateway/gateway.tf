@@ -42,6 +42,10 @@ resource "aws_api_gateway_stage" "production" {
   tags = {
     Name = "${each.value.full_name}-production"
   }
+
+  depends_on = [
+    aws_api_gateway_account.account
+  ]
 }
 
 resource "aws_api_gateway_usage_plan" "plan" {

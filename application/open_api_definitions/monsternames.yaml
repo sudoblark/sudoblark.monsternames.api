@@ -100,6 +100,8 @@ paths:
   /goatmen:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -144,6 +146,8 @@ paths:
   /goblin:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -195,6 +199,8 @@ paths:
   /ogre:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -238,6 +244,8 @@ paths:
   /orc:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -288,6 +296,8 @@ paths:
   /skeleton:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -338,6 +348,8 @@ paths:
   /troll:
     post:
       summary: Add pseudo-random name options
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
@@ -390,6 +402,12 @@ components:
       schema:
         type: string
         description: Type of content to return
+
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
 
   examples:
     FirstName:
