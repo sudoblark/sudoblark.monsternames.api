@@ -47,6 +47,32 @@ coverage.xml
 *,cover
 .hypothesis/
 
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+.terraform.lock.hcl
+
+# Lambda packages
+*.zip
+lambda-packages/*/build/
+lambda-packages/*/.venv/
+lambda-packages/*/venv/
+
+# DynamoDB exports
+dynamodb-exports/
+
+# Old infrastructure (v1) - keeping for reference but not tracking changes
+infrastructure/modules/iam_roles/
+infrastructure/modules/lambda/
+infrastructure/modules/s3_bucket/
+infrastructure/modules/api_gateway_rest_api/
+infrastructure/modules/additional_s3_files/
+infrastructure/modules/application_registry/
+infrastructure/sudoblark/
+
 # Translations
 *.mo
 *.pot
@@ -232,3 +258,5 @@ terraform.rc
 
 # Temp dev files
 dev_scratchpad/*
+
+./dynamodb-exports/*.json
