@@ -37,6 +37,13 @@ locals {
       bucket_name  = "assets"
       object_key   = "swagger_ui/index.html"
       content_type = "text/html"
+    },
+    {
+      name         = "openapi-spec"
+      source_path  = "./application/open_api_definitions/monsternames.yaml"
+      bucket_name  = "assets"
+      object_key   = "open_api_definitions/monsternames.yaml"
+      content_type = "application/x-yaml"
     }
   ]
 }
