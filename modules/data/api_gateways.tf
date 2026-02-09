@@ -50,7 +50,7 @@ locals {
     {
       name                = "backend"
       description         = "This is a relatively simple REST API, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
-      openapi_spec_path   = "./application/open_api_definitions/monsternames.yaml"
+      openapi_spec_path   = "../../application/open_api_definitions/monsternames.yaml"
       template_variables = {
         # Will be enriched with actual ARNs and values
         backend_lambda_arn       = "backend"

@@ -51,7 +51,7 @@ locals {
       handler     = "backend_lambda.main.handler"
       runtime     = "python3.11"
       role_name   = "backend-lambda"
-      zip_file_path = "./lambda-packages/backend.zip"
+      zip_file_path = "../../lambda-packages/backend.zip"
       timeout     = 900
       memory      = 256
       lambda_layers = [

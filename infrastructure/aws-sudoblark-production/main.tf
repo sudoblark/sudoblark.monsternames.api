@@ -35,8 +35,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      environment = "production"
+      environment = "aws-sudoblark-production"
       managed_by  = "sudoblark.monsternames.api"
+      project     = "monsternames"
+      application = "api"
     }
   }
 }
@@ -51,10 +53,14 @@ provider "aws" {
   }
 
   default_tags {
-    tags = merge({
-      environment = "production"
-      managed_by  = "sudoblark.monsternames.api"
-      }, aws_servicecatalogappregistry_application.demo.tags
+    tags = merge(
+      {
+        environment = "aws-sudoblark-production"
+        managed_by  = "sudoblark.monsternames.api"
+        project     = "monsternames"
+        application = "api"
+      },
+      aws_servicecatalogappregistry_application.application.application_tag
     )
   }
 }
