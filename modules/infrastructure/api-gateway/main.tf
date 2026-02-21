@@ -8,14 +8,3 @@ terraform {
     }
   }
 }
-
-# Remote state data source for DNS hosted zone
-data "terraform_remote_state" "dns" {
-  backend = "s3"
-  
-  config = {
-    bucket = "aws-sudoblark-production-terraform-state"
-    key    = "dns/terraform.tfstate"
-    region = "eu-west-2"
-  }
-}

@@ -187,7 +187,7 @@ locals {
         # Compute custom domain configuration
         custom_domain_computed = api.custom_domain != null ? {
           domain_name           = "${api.custom_domain.subdomain_name}.${local.base_domain}"
-          certificate_arn       = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
+          certificate_arn       = var.dns_certificate_arn_regional
           create_route53_record = try(api.custom_domain.create_route53_record, false)
         } : null
         
@@ -212,7 +212,7 @@ locals {
       api.custom_domain != null ? {
         custom_domain = {
           domain_name     = "${api.custom_domain.subdomain_name}.${local.base_domain}"
-          certificate_arn = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
+          certificate_arn = var.dns_certificate_arn_regional
         }
       } : {}
     )

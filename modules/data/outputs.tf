@@ -48,6 +48,16 @@ output "s3_files_map" {
   value       = local.s3_files_map
 }
 
+output "dns_zone_id" {
+  description = "Route53 hosted zone ID from DNS infrastructure"
+  value       = var.dns_zone_id
+}
+
+output "dns_certificate_arn_regional" {
+  description = "Regional ACM certificate ARN from DNS infrastructure"
+  value       = var.dns_certificate_arn_regional
+}
+
 output "defaults" {
   description = "Default values used across infrastructure"
   value = {

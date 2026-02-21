@@ -45,7 +45,7 @@ jobs:
 
       - name: Create Lambda deployment packages
         run: |
-          # TODO
+          ./scripts/build-lambda.sh backend
 
       - name: terraform validate
         uses: dflook/terraform-validate@v2
@@ -113,7 +113,8 @@ jobs:
 
       - name: Create Lambda deployment packages
         run: |
-          # TODO
+          chmod +x ./scripts/build-lambda.sh
+          ./scripts/build-lambda.sh backend
 
       - name: terraform plan
         uses: dflook/terraform-plan@v2

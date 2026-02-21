@@ -1,8 +1,13 @@
 # Checkov configuration
 # Documentation: https://www.checkov.io/2.Basics/Suppressing%20and%20Skipping%20Policies.html
 
-# Skip specific checks that don't apply to this demo/workshop repository
+# Skip specific checks that don't apply to this repository
 skip-check:
+  # S3
+  - CKV_AWS_21 # Versioning is overkill for a simple SwaggerUI
+  - CKV_AWS_144 # Cross-account replication is also overkill
+  - CKV_AWS_145 # KMS is also overkill for this repo
+  
 
 
 # Framework to scan

@@ -17,5 +17,14 @@ variable "api_gateways" {
     burst_limit                   = number
     rate_limit                    = number
     api_keys                      = list(string)
+    custom_domain = optional(object({
+      domain_name     = string
+      certificate_arn = string
+    }))
   }))
+}
+
+variable "dns_zone_id" {
+  description = "Route53 hosted zone ID for DNS record creation"
+  type        = string
 }

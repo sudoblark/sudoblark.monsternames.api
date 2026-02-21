@@ -196,13 +196,13 @@ resource "aws_route53_record" "custom_domain_alias" {
     if api.custom_domain != null
   }
 
-  zone_id = data.terraform_remote_state.dns.outputs.hosted_zone.zone_id
+  zone_id = var.dns_zone_id
   name    = each.value.custom_domain.domain_name
   type    = "A"
 
   alias {
     name                   = aws_api_gateway_domain_name.custom_domain[each.key].regional_domain_name
-    zone_id                = aws_api_gateway_domain_name.custom_domain[each.key].regional_hosted_zone_id
+    zone_id                = aws_api_gateway_domain_name.custom_domain[each.key].regional_zone_id
     evaluate_target_health = false
   }
 }
