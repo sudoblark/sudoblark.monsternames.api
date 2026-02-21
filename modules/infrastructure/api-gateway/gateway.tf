@@ -146,3 +146,63 @@ resource "aws_api_gateway_method_settings" "settings" {
     data_trace_enabled = false
   }
 }
+
+# ============================================================================
+# Custom Domain Configuration
+# ============================================================================
+
+# Custom domain names for APIs
+resource "aws_api_gateway_domain_name" "custom_domain" {
+  for_each = {
+    for key, api in local.api_gateways_map :
+    key => api
+    if api.custom_domain != null
+  }
+
+  domain_name              = each.value.custom_domain.domain_name
+  regional_certificate_arn = each.value.custom_domain.certificate_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = {
+    Name = "${each.value.full_name}-domain"
+  }
+}
+
+# Base path mapping to link custom domain to API stage
+resource "aws_api_gateway_base_path_mapping" "custom_domain_mapping" {
+  for_each = {
+    for key, api in local.api_gateways_map :
+    key => api
+    if api.custom_domain != null
+  }
+
+  api_id      = aws_api_gateway_rest_api.api[each.key].id
+  stage_name  = aws_api_gateway_stage.production[each.key].stage_name
+  domain_name = aws_api_gateway_domain_name.custom_domain[each.key].domain_name
+}
+
+# ============================================================================
+# Route53 DNS Records
+# ============================================================================
+
+# Automatically create DNS records for custom domains
+resource "aws_route53_record" "custom_domain_alias" {
+  for_each = {
+    for key, api in local.api_gateways_map :
+    key => api
+    if api.custom_domain != null
+  }
+
+  zone_id = data.terraform_remote_state.dns.outputs.hosted_zone.zone_id
+  name    = each.value.custom_domain.domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_api_gateway_domain_name.custom_domain[each.key].regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.custom_domain[each.key].regional_hosted_zone_id
+    evaluate_target_health = false
+  }
+}

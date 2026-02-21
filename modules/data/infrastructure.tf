@@ -149,6 +149,9 @@ locals {
 # ============================================================================
 
 locals {
+  # Determine base domain based on environment
+  base_domain = local.account == "aws-sudoblark-production" ? "sudoblark.com" : "${replace(local.account, "aws-sudoblark-", "")}.sudoblark.com"
+  
   # Enrich API Gateway data with computed values and resolve cross-references
   api_gateways_enriched = [
     for api in local.api_gateways : merge(
@@ -164,6 +167,7 @@ locals {
         burst_limit          = 5
         rate_limit           = 10
         api_keys             = []
+        custom_domain        = null
       },
       api,
       {
@@ -179,6 +183,13 @@ locals {
           for lambda_name in api.allowed_lambda_names :
           local.lambdas_map[lambda_name].function_name
         ]
+        
+        # Compute custom domain configuration
+        custom_domain_computed = api.custom_domain != null ? {
+          domain_name           = "${api.custom_domain.subdomain_name}.${local.base_domain}"
+          certificate_arn       = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
+          create_route53_record = try(api.custom_domain.create_route53_record, false)
+        } : null
         
         # Resolve template variables
         template_variables = {
@@ -196,7 +207,14 @@ locals {
             value
           )
         }
-      }
+      },
+      # Merge custom domain if present
+      api.custom_domain != null ? {
+        custom_domain = {
+          domain_name     = "${api.custom_domain.subdomain_name}.${local.base_domain}"
+          certificate_arn = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
+        }
+      } : {}
     )
   ]
 
