@@ -113,7 +113,6 @@ jobs:
 
       - name: Create Lambda deployment packages
         run: |
-          chmod +x ./scripts/build-lambda.sh
           ./scripts/build-lambda.sh backend
 
       - name: terraform plan
