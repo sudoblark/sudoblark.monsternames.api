@@ -176,6 +176,7 @@ resource "aws_api_gateway_domain_name" "custom_domain" {
 
   domain_name              = each.value.custom_domain.domain_name
   regional_certificate_arn = each.value.custom_domain.certificate_arn
+  security_policy          = "TLS_1_2"
 
   endpoint_configuration {
     types = ["REGIONAL"]
