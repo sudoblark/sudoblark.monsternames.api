@@ -3,8 +3,8 @@ data "terraform_remote_state" "dns" {
   backend = "s3"
 
   config = {
-    bucket = "aws-sudoblark-production-terraform-state"
-    key    = "core/dns/terraform.tfstate"
+    bucket  = "aws-sudoblark-production-terraform-state"
+    key     = "core/dns/terraform.tfstate"
     region  = "eu-west-2"
     encrypt = true
     assume_role = {

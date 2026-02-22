@@ -13,6 +13,10 @@ resource "aws_api_gateway_rest_api" "api" {
   tags = {
     Name = each.value.full_name
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
@@ -107,6 +111,17 @@ resource "aws_lambda_permission" "api_gateway" {
 }
 
 # CloudWatch Logs for API Gateway
+resource "aws_cloudwatch_log_group" "api_gateway_access_logs" {
+  for_each = local.api_gateways_map
+
+  name              = "/aws/apigateway/${each.value.full_name}"
+  retention_in_days = 7
+
+  tags = {
+    Name = "${each.value.full_name}-access-logs"
+  }
+}
+
 resource "aws_api_gateway_account" "account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
 }

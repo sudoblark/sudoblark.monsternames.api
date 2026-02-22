@@ -7,7 +7,21 @@ skip-check:
   - CKV_AWS_21 # Versioning is overkill for a simple SwaggerUI
   - CKV_AWS_144 # Cross-account replication is also overkill
   - CKV_AWS_145 # KMS is also overkill for this repo
-  
+
+  # API Gateway - Cost-related checks that we are consciously ignoring for now
+  - CKV_AWS_76 # Access logging adds CloudWatch costs
+  - CKV_AWS_120 # Caching costs ~$15/month minimum
+  - CKV2_AWS_51 # Client certificate authentication not needed for Lambda backend (already secure within AWS)
+  - CKV2_AWS_29 # WAF costs $5/month + per-request fees, API key auth + usage limits sufficient for now
+
+  # Lambda - Cost-related checks that we are consciously ignoring for now
+  - CKV_AWS_50 # X-Ray tracing adds costs for trace recording/analysis
+  - CKV_AWS_173 # Customer-managed KMS for env vars costs $1/month, AWS-managed encryption is sufficient
+  - CKV_AWS_272 # Code signing is overkill for now
+
+  # CloudWatch Logs - Cost-related checks that we are consciously ignoring for now
+  - CKV_AWS_158 # Customer-managed KMS for logs costs $1/month, AWS-managed encryption is sufficient
+  - CKV_AWS_338 # 1 year log retention adds storage costs, 14 days is sufficient
 
 
 # Framework to scan

@@ -46,14 +46,14 @@
 locals {
   lambdas = [
     {
-      name        = "backend"
-      description = "Ingests and retrieves monsternames from DynamoDB"
-      handler     = "backend_lambda.main.handler"
-      runtime     = "python3.11"
-      role_name   = "backend-lambda"
+      name          = "backend"
+      description   = "Ingests and retrieves monsternames from DynamoDB"
+      handler       = "backend_lambda.main.handler"
+      runtime       = "python3.11"
+      role_name     = "backend-lambda"
       zip_file_path = "../../lambda-packages/backend.zip"
-      timeout     = 900
-      memory      = 256
+      timeout       = 900
+      memory        = 256
       lambda_layers = [
         # Will be enriched with region
         "powertools-python"

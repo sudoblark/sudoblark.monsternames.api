@@ -2,11 +2,11 @@
 resource "aws_s3_object" "files" {
   for_each = local.regular_files
 
-  bucket        = each.value.bucket_id
-  key           = each.value.object_key
-  source        = each.value.source_path
-  content_type  = each.value.content_type
-  etag          = filemd5(each.value.source_path)
+  bucket       = each.value.bucket_id
+  key          = each.value.object_key
+  source       = each.value.source_path
+  content_type = each.value.content_type
+  etag         = filemd5(each.value.source_path)
 
   tags = {
     Name = each.value.name

@@ -48,9 +48,9 @@
 locals {
   api_gateways = [
     {
-      name                = "backend"
-      description         = "This is a relatively simple REST API, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
-      openapi_spec_path   = "../../application/open_api_definitions/monsternames.yaml"
+      name              = "backend"
+      description       = "This is a relatively simple REST API, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
+      openapi_spec_path = "../../application/open_api_definitions/monsternames.yaml"
       template_variables = {
         # Will be enriched with actual ARNs and values
         backend_lambda_arn       = "backend"
@@ -62,7 +62,7 @@ locals {
       allowed_lambda_names = ["backend"]
       quota_limit          = 500
       rate_limit           = 100
-      api_keys             = ["admin"]  # For POST endpoints
+      api_keys             = ["admin"] # For POST endpoints
       custom_domain = {
         subdomain_name = "monsternames"
       }

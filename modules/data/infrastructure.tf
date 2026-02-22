@@ -19,15 +19,15 @@ locals {
     for bucket in local.buckets : merge(
       {
         # Defaults
-        account              = local.account
-        project              = local.project
-        application          = local.application
-        folder_paths         = []
-        days_retention       = 365
-        multipart_retention  = 7
-        enable_event_bridge  = false
-        log_bucket           = null
-        bucket_policy_json   = null
+        account             = local.account
+        project             = local.project
+        application         = local.application
+        folder_paths        = []
+        days_retention      = 365
+        multipart_retention = 7
+        enable_event_bridge = false
+        log_bucket          = null
+        bucket_policy_json  = null
       },
       bucket,
       {
@@ -65,7 +65,7 @@ locals {
         # Computed values
         full_name = "${local.resource_prefix}-${role.name}"
         arn       = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${role.name}"
-        
+
         # Resolve policy statement resources with actual ARNs
         policy_statements = [
           for stmt in role.policy_statements : merge(
@@ -125,7 +125,7 @@ locals {
         arn           = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.resource_prefix}-${lambda.name}"
         role_arn      = local.iam_roles_map[lambda.role_name].arn
         function_name = "${local.resource_prefix}-${lambda.name}"
-        
+
         # Resolve Lambda layers to full ARNs
         lambda_layers = [
           for layer in lambda.lambda_layers :
@@ -151,7 +151,7 @@ locals {
 locals {
   # Determine base domain based on environment
   base_domain = local.account == "aws-sudoblark-production" ? "sudoblark.com" : "${replace(local.account, "aws-sudoblark-", "")}.sudoblark.com"
-  
+
   # Enrich API Gateway data with computed values and resolve cross-references
   api_gateways_enriched = [
     for api in local.api_gateways : merge(
@@ -173,7 +173,7 @@ locals {
       {
         # Computed values
         full_name = "${local.resource_prefix}-${api.name}"
-        
+
         # Resolve Lambda ARNs from names
         allowed_lambda_arns = [
           for lambda_name in api.allowed_lambda_names :
@@ -183,14 +183,14 @@ locals {
           for lambda_name in api.allowed_lambda_names :
           local.lambdas_map[lambda_name].function_name
         ]
-        
+
         # Compute custom domain configuration
         custom_domain_computed = api.custom_domain != null ? {
           domain_name           = "${api.custom_domain.subdomain_name}.${local.base_domain}"
           certificate_arn       = var.dns_certificate_arn_regional
           create_route53_record = try(api.custom_domain.create_route53_record, false)
         } : null
-        
+
         # Resolve template variables
         template_variables = {
           for key, value in api.template_variables :

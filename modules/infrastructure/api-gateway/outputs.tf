@@ -47,12 +47,12 @@ output "custom_domains" {
   description = "Map of custom domain configurations"
   value = {
     for name, domain in aws_api_gateway_domain_name.custom_domain : name => {
-      domain_name                   = domain.domain_name
-      regional_domain_name          = domain.regional_domain_name
-      regional_zone_id              = domain.regional_zone_id
-      cloudfront_domain_name        = domain.cloudfront_domain_name
-      cloudfront_zone_id            = domain.cloudfront_zone_id
-      certificate_arn               = domain.regional_certificate_arn
+      domain_name            = domain.domain_name
+      regional_domain_name   = domain.regional_domain_name
+      regional_zone_id       = domain.regional_zone_id
+      cloudfront_domain_name = domain.cloudfront_domain_name
+      cloudfront_zone_id     = domain.cloudfront_zone_id
+      certificate_arn        = domain.regional_certificate_arn
     }
   }
 }
