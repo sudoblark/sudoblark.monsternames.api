@@ -11,10 +11,13 @@ info:
   description: |-
     This is a relatively simple RESTAPI, based on the OpenAPI 3.0 specification, which generates pseudo-random names for
     common fantasy monsters.
+  contact:
+    name: Sudoblark Ltd
+    url: https://github.com/sudoblark/sudoblark.monsternames.api
   license:
     name: BSD 3 clause
     url: https://raw.githubusercontent.com/sudoblark/sudoblark.monsternames.api/refs/heads/main/LICENSE.txt
-  version: 1.1.0
+  version: 2.0.0
 externalDocs:
   description: Source Code
   url: https://github.com/sudoblark/sudoblark.monsternames.api
@@ -61,6 +64,39 @@ paths:
             "Content-Type":
               $ref: '#/components/headers/Content-Type'
 
+  /openapi:
+    get:
+      summary: Get OpenAPI specification
+      description: Returns the OpenAPI 3.0 specification for this API
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri: "arn:aws:apigateway:${aws_region_name}:s3:path//${asset_bucket_name}/open_api_definitions/monsternames.yaml"
+        credentials: "${api_gateway_iam_role_arn}"
+        type: "aws"
+        passthroughBehavior: "when_no_match"
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              "method.response.header.Content-Type": "'application/x-yaml'"
+              "method.response.header.Access-Control-Allow-Origin": "'*'"
+      responses:
+        "200":
+          description: "OpenAPI specification in YAML format"
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+          headers:
+            "Content-Type":
+              schema:
+                type: string
+                description: YAML content type
+            "Access-Control-Allow-Origin":
+              schema:
+                type: string
+                description: CORS header for Swagger UI
+
   /goatmen:
     post:
       summary: Add pseudo-random name options
@@ -104,6 +140,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
   /goblin:
     post:
@@ -155,6 +193,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
   /ogre:
     post:
@@ -198,6 +238,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
   /orc:
     post:
@@ -248,6 +290,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
   /skeleton:
     post:
@@ -298,6 +342,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
   /troll:
     post:
@@ -347,6 +393,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/200GetFirstAndLastName"
+        "500":
+          $ref: "#/components/responses/500InternalError"
 
 components:
   headers:
@@ -384,8 +432,10 @@ components:
       properties:
         error:
           type: string
+          description: Error type identifier
         message:
           type: string
+          description: Human-readable error message
 
     FirstNameModel:
       type: object
@@ -394,6 +444,10 @@ components:
       properties:
         first_name:
           type: string
+          description: First name component
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s\-\''.]+$'
 
     LastNameModel:
       type: object
@@ -402,6 +456,10 @@ components:
       properties:
         last_name:
           type: string
+          description: Last name or title component
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s\-\''.]+$'
 
     FirstAndLastNameModel:
       type: object
@@ -411,8 +469,16 @@ components:
       properties:
         first_name:
           type: string
+          description: First name component
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s\-\''.]+$'
         last_name:
           type: string
+          description: Last name or title component
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s\-\''.]+$'
 
   responses:
     200GetFirstName:
@@ -427,8 +493,15 @@ components:
             properties:
               first_name:
                 type: string
+                description: Randomly selected first name
               full_name:
                 type: string
+                description: Complete formatted name
+          examples:
+            goatmen:
+              value:
+                first_name: "Fluffy"
+                full_name: "Fluffy"
 
     200PostFirstName:
       description: "Successful response"
@@ -442,8 +515,15 @@ components:
             properties:
               first_name:
                 type: string
+                description: The name that was added
               message:
                 type: string
+                description: Confirmation message
+          examples:
+            success:
+              value:
+                first_name: "Barnaby"
+                message: "Successfully added first name"
 
     200GetFirstAndLastName:
       description: "Successful response"
@@ -458,10 +538,19 @@ components:
             properties:
               first_name:
                 type: string
+                description: Randomly selected first name
               last_name:
                 type: string
+                description: Randomly selected last name or title
               full_name:
                 type: string
+                description: Complete formatted name
+          examples:
+            goblin:
+              value:
+                first_name: "Dave"
+                last_name: "The Accountant"
+                full_name: "Dave The Accountant"
 
     200PostFirstAndLastName:
       description: "Successful response"
@@ -474,10 +563,19 @@ components:
             properties:
               first_name:
                 type: string
+                description: The first name that was added (if provided)
               last_name:
                 type: string
+                description: The last name that was added (if provided)
               message:
                 type: string
+                description: Confirmation message
+          examples:
+            both_names:
+              value:
+                first_name: "Dave"
+                last_name: "The Accountant"
+                message: "Successfully added first and last name"
 
     400PostInvalidBody:
       description: "Invalid body in POST"
@@ -492,3 +590,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorModel"
+          examples:
+            duplicate:
+              value:
+                error: "ConditionalCheckFailedException"
+                message: "Name already exists in database"
+
+    500InternalError:
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorModel"
+          examples:
+            server_error:
+              value:
+                error: "InternalServerError"
+                message: "An unexpected error occurred while processing your request"
