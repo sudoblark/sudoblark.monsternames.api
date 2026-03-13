@@ -1,15 +1,12 @@
 name: Terraform Apply
 
-env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
 on:
   workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
+  id-token: write
 
 jobs:
   apply:
@@ -27,6 +24,12 @@ jobs:
       - name: Create Lambda deployment packages
         run: |
           ./scripts/build-lambda.sh backend
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::741139166799:role/service-accounts/aws-sudoblark-management-github-cicd-role
+          aws-region: eu-west-2
 
       - name: terraform apply
         uses: dflook/terraform-apply@v1
