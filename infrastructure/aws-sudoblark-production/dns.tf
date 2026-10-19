@@ -17,7 +17,6 @@ data "terraform_remote_state" "dns" {
 }
 
 locals {
-  dns_zone_id                    = data.terraform_remote_state.dns.outputs.hosted_zone.zone_id
-  dns_certificate_arn_regional   = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
-  dns_certificate_arn_cloudfront = data.terraform_remote_state.dns.outputs.acm_certificate_arn_us_east_1
+  dns_zone_id                  = data.terraform_remote_state.dns.outputs.hosted_zone.zone_id
+  dns_certificate_arn_regional = data.terraform_remote_state.dns.outputs.acm_certificate_arn_regional
 }
