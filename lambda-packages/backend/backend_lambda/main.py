@@ -2,8 +2,8 @@
 Main Lambda handler for MonsterNames API.
 
 This module provides the entry point for the Lambda function that serves as the
-backend for the MonsterNames REST API. It handles API Gateway events and performs
-GET/POST operations against DynamoDB tables for monster name data.
+backend for the MonsterNames REST API. It handles API Gateway events and reads
+monster names from DynamoDB tables. The API is read-only: only GET is served.
 
 Environment Variables:
     CONFIG_FILE (str): Path to configuration file for DynamoDB table mapping
@@ -64,20 +64,6 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
 
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
 
-        # Parse request body
-        payload: dict[str, Any] = {}
-        if event.body:
-            try:
-                payload = json.loads(event.body) if isinstance(event.body, str) else event.body
-            except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON in request body: {str(e)}")
-                return {
-                    "statusCode": 400,
-                    "body": json.dumps({"error": "Invalid JSON in request body"}),
-                }
-
-        logger.debug(f"Parsed payload: {payload}")
-
         # Load configuration and check endpoint exists
         config_parser: ConfigParser = ConfigParser(config_path)
 
@@ -96,15 +82,13 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
             first_name_table=first_name_table, last_name_table=last_name_table
         )
 
-        # Route to appropriate method
-        if http_method == "get":
-            status_code, response_body = service.get_random_name()
-        elif http_method == "post":
-            status_code, response_body = service.create_name(payload)
-        else:
+        # The API is read-only, so GET is the only method served
+        if http_method != "get":
             logger.warning(f"Unsupported HTTP method: {http_method}")
             error = f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
             return {"statusCode": 405, "body": json.dumps({"error": error})}
+
+        status_code, response_body = service.get_random_name()
 
         logger.info(f"Request completed with status {status_code}")
         logger.debug(f"Response body: {response_body}")

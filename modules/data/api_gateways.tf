@@ -41,7 +41,6 @@
     allowed_lambda_names = ["backend"]
     quota_limit          = 500
     rate_limit           = 100
-    api_keys             = ["ingestion"]
   }
 */
 
@@ -62,7 +61,6 @@ locals {
       allowed_lambda_names = ["backend"]
       quota_limit          = 500
       rate_limit           = 100
-      api_keys             = ["admin"] # For POST endpoints
       custom_domain = {
         subdomain_name = "monsternames"
       }

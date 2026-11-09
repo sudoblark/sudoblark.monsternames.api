@@ -91,26 +91,14 @@ locals {
       ]
       policy_statements = [
         {
-          sid    = "AllowReadWriteNameTables"
+          sid    = "AllowReadNameTables"
           effect = "Allow"
           actions = [
-            "dynamodb:Scan",
-            "dynamodb:PutItem"
+            "dynamodb:Scan"
           ]
           resources = [
             # Will be enriched to every table in dynamodb_tables.tf
             "dynamodb:*"
-          ]
-        },
-        {
-          sid    = "AllowListTables"
-          effect = "Allow"
-          actions = [
-            "dynamodb:ListTables"
-          ]
-          resources = [
-            # ListTables has no resource-level permissions
-            "*"
           ]
         },
         {

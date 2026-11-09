@@ -1,6 +1,6 @@
 # Backend Lambda for MonsterNames API
 
-This Lambda function serves as the backend for the MonsterNames REST API, handling GET and POST requests for fantasy monster name generation and storage.
+This Lambda function serves as the backend for the read-only MonsterNames REST API, returning random fantasy monster names from the DynamoDB tables Terraform manages.
 
 ## Architecture
 
@@ -14,8 +14,7 @@ The Lambda is structured following best practices:
 ## Features
 
 - **GET requests**: Retrieve random monster names from DynamoDB
-- **POST requests**: Insert new monster names into DynamoDB  
-- **Automatic table creation**: Creates DynamoDB tables if they don't exist
+- **Read-only**: Other methods get a 405, and names change only through `application/seed_data/`
 - **Comprehensive logging**: Structured logging with configurable levels
 - **Type safety**: Full type hints throughout codebase
 - **Error handling**: Explicit exception handling with proper logging
@@ -64,15 +63,6 @@ Follows [sudoblark.documentation Python standards](https://github.com/sudoblark/
 ```bash
 curl https://monsternames.sudoblark.com/skeleton
 # Response: {"first_name": "Reginald", "last_name": "Montgomery", "full_name": "Reginald Montgomery"}
-```
-
-### POST Request
-```bash
-curl -X POST https://monsternames.sudoblark.com/skeleton \
-  -H "x-api-key: $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"first_name": "Mortimer"}'
-# Response: {"message": "Successfully inserted 'Mortimer' as valid 'first_name'."}
 ```
 
 ## Configuration Format

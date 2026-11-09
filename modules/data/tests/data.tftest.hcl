@@ -78,9 +78,17 @@ run "iam_roles" {
   assert {
     condition = one([
       for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.resources
-      if statement.sid == "AllowReadWriteNameTables"
+      if statement.sid == "AllowReadNameTables"
     ]) == [for table in output.dynamodb_tables : table.arn]
     error_message = "dynamodb:* must resolve to exactly the tables in dynamodb_tables.tf."
+  }
+
+  assert {
+    condition = flatten([
+      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.actions
+      if startswith(statement.actions[0], "dynamodb:")
+    ]) == ["dynamodb:Scan"]
+    error_message = "The API is read-only, so the backend may only Scan its tables."
   }
 }
 
@@ -148,6 +156,11 @@ run "api_gateways" {
   assert {
     condition     = output.api_gateways_map["backend"].allowed_lambda_function_names == [output.lambdas_map["backend"].function_name]
     error_message = "allowed_lambda_names must resolve to Lambda function names."
+  }
+
+  assert {
+    condition     = output.api_gateways_map["backend"].api_keys == []
+    error_message = "The API is read-only, so it has no API keys."
   }
 
   assert {

@@ -71,6 +71,7 @@ def test_get_without_tables_returns_500(
 
     assert status == 500
     assert body == {"error": "Unable to find name entries in database"}
+    assert list(dynamodb.tables.all()) == [], "the Lambda must never create tables"
 
 
 def test_unknown_monster_returns_404(
@@ -82,11 +83,26 @@ def test_unknown_monster_returns_404(
     assert body == {"error": "Endpoint does not exist"}
 
 
-@pytest.mark.parametrize("method", ["GET", "POST"])
-def test_invalid_json_body_returns_400(
-    method: str, dynamodb: Any, api_event: Callable, lambda_context: Any
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
+def test_write_methods_return_405(
+    method: str, seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
-    status, body = invoke(api_event("/skeleton", method, "{not json"), lambda_context)
+    seed_table(table_name("skeleton", "first-name"), ["Reginald"])
 
-    assert status == 400
-    assert body == {"error": "Invalid JSON in request body"}
+    status, body = invoke(
+        api_event("/skeleton", method, {"first_name": "Mortimer"}), lambda_context
+    )
+
+    assert status == 405
+    assert body == {"error": f"'{method}' method not supported for endpoint '/skeleton'"}
+
+
+def test_get_ignores_the_request_body(
+    seed_table: Callable, api_event: Callable, lambda_context: Any
+) -> None:
+    seed_table(table_name("goatmen", "first-name"), ["Fluffy"])
+
+    status, body = invoke(api_event("/goatmen", "GET", "{not json"), lambda_context)
+
+    assert status == 200
+    assert body == {"first_name": "Fluffy", "full_name": "Fluffy"}
