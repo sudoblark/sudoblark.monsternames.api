@@ -68,13 +68,15 @@ Follows [sudoblark.documentation Python standards](https://github.com/sudoblark/
 
 ### GET Request
 ```bash
-curl https://monsternames.sudoblark.com/skeleton/first_name
-# Response: {"first_name": "Reginald"}
+curl https://monsternames.sudoblark.com/skeleton
+# Response: {"first_name": "Reginald", "last_name": "Montgomery", "full_name": "Reginald Montgomery"}
 ```
 
 ### POST Request
 ```bash
-curl -X POST https://monsternames.sudoblark.com/skeleton/first_name \
+curl -X POST https://monsternames.sudoblark.com/skeleton \
+  -H "x-api-key: $API_KEY" \
+  -H "Content-Type: application/json" \
   -d '{"first_name": "Mortimer"}'
 # Response: {"message": "Successfully inserted 'Mortimer' as valid 'first_name'."}
 ```

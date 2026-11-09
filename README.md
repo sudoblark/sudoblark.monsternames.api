@@ -152,18 +152,16 @@ The MonsterNames API provides endpoints for generating themed fantasy monster na
 
 **Available Endpoints:**
 
-| Endpoint | Monster Type | Naming Theme | Example Response |
-|----------|--------------|--------------|------------------|
-| `/goatmen/first_name` | Goatmen | Cute fluffy animals | `{"first_name": "Fluffy"}` |
-| `/goblin/first_name` | Goblin | Washed out wrestlers | `{"first_name": "The Crusher"}` |
-| `/goblin/last_name` | Goblin | Average blokes | `{"last_name": "Johnson"}` |
-| `/ogre/first_name` | Ogre | Caveman-like speech | `{"first_name": "Grug"}` |
-| `/orc/first_name` | Orc | Noun + silly moniker | `{"first_name": "Stinky"}` |
-| `/orc/last_name` | Orc | Silly monikers | `{"last_name": "the Unwashed"}` |
-| `/skeleton/first_name` | Skeleton | 18th century gentlemen | `{"first_name": "Reginald"}` |
-| `/skeleton/last_name` | Skeleton | British aristocracy | `{"last_name": "Worthington"}` |
-| `/troll/first_name` | Troll | Scandinavian names | `{"first_name": "Bjorn"}` |
-| `/troll/last_name` | Troll | Nordic surnames | `{"last_name": "Ironforge"}` |
+Each monster has one `GET` route. It returns a random first name, a random last name if that monster has them, and both joined as `full_name`.
+
+| Endpoint | Naming Theme | Example Response |
+|----------|--------------|------------------|
+| `GET /goatmen` | Cute fluffy animals | `{"first_name": "Fluffy", "full_name": "Fluffy"}` |
+| `GET /goblin` | Washed out wrestlers and average blokes | `{"first_name": "Reggie", "last_name": "Taylor", "full_name": "Reggie Taylor"}` |
+| `GET /ogre` | Caveman-like speech | `{"first_name": "Gog", "full_name": "Gog"}` |
+| `GET /orc` | Noun + silly moniker | `{"first_name": "Yoghurt", "last_name": "the Angriest", "full_name": "Yoghurt the Angriest"}` |
+| `GET /skeleton` | 18th century British gentlemen | `{"first_name": "Reginald", "last_name": "Montgomery", "full_name": "Reginald Montgomery"}` |
+| `GET /troll` | Scandinavian twist | `{"first_name": "Sven", "last_name": "Gongleson", "full_name": "Sven Gongleson"}` |
 
 **Interactive Documentation:**
 
@@ -172,13 +170,11 @@ Visit [https://monsternames.sudoblark.com](https://monsternames.sudoblark.com) t
 **Example Usage:**
 
 ```bash
-# Get a random goatmen first name
-curl https://monsternames.sudoblark.com/goatmen/first_name
+# Get a random goatmen name
+curl https://monsternames.sudoblark.com/goatmen
 
-# Get a random skeleton full name
-FIRST=$(curl -s https://monsternames.sudoblark.com/skeleton/first_name | jq -r '.first_name')
-LAST=$(curl -s https://monsternames.sudoblark.com/skeleton/last_name | jq -r '.last_name')
-echo "$FIRST $LAST"
+# Get just a skeleton's full name
+curl -s https://monsternames.sudoblark.com/skeleton | jq -r '.full_name'
 ```
 
 **Rate Limiting:**
@@ -502,17 +498,17 @@ sequenceDiagram
     participant DDB as DynamoDB
     participant CW as CloudWatch
 
-    User->>APIGW: GET /skeleton/first_name
+    User->>APIGW: GET /skeleton
     activate APIGW
     APIGW->>Lambda: Invoke function
     deactivate APIGW
 
     activate Lambda
-    Lambda->>DDB: Query monsternames.skeleton.first_name
-    DDB-->>Lambda: Random name data
-    Lambda->>Lambda: Format response
+    Lambda->>DDB: Scan the skeleton first_name and last_name tables
+    DDB-->>Lambda: Name data
+    Lambda->>Lambda: Pick a random name from each
     Lambda->>CW: Log request
-    Lambda-->>User: {"first_name": "Reginald"}
+    Lambda-->>User: {"first_name": "Reginald", "last_name": "Montgomery", "full_name": "Reginald Montgomery"}
     deactivate Lambda
 
     Note over User,CW: Response time: ~100-200ms
@@ -528,16 +524,15 @@ sequenceDiagram
 2. **Call API endpoints:**
 
 ```bash
-# Get random skeleton name
-curl https://monsternames.sudoblark.com/skeleton/first_name
+# Get a random skeleton name
+curl https://monsternames.sudoblark.com/skeleton
 
-# Get random orc full name
-curl https://monsternames.sudoblark.com/orc/first_name
-curl https://monsternames.sudoblark.com/orc/last_name
+# Get a random orc name
+curl https://monsternames.sudoblark.com/orc
 
 # Generate 5 goblin names
 for i in {1..5}; do
-  curl -s https://monsternames.sudoblark.com/goblin/first_name
+  curl -s https://monsternames.sudoblark.com/goblin | jq -r '.full_name'
 done
 ```
 
