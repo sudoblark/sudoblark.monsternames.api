@@ -8,6 +8,16 @@ output "buckets_map" {
   value       = local.buckets_map
 }
 
+output "dynamodb_tables" {
+  description = "List of enriched DynamoDB table configurations"
+  value       = local.dynamodb_tables_enriched
+}
+
+output "dynamodb_tables_map" {
+  description = "Map of DynamoDB tables keyed by short name"
+  value       = local.dynamodb_tables_map
+}
+
 output "iam_roles" {
   description = "List of enriched IAM role configurations"
   value       = local.iam_roles_enriched

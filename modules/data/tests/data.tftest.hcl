@@ -68,8 +68,43 @@ run "iam_roles" {
   }
 
   assert {
-    condition     = output.iam_roles_map["backend-lambda"].policy_statements[1].resources == ["arn:aws:logs:eu-west-2:123456789012:log-group:/aws/lambda/aws-sudoblark-production-monsternames-api-*"]
+    condition = one([
+      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.resources
+      if statement.sid == "AllowCloudWatchLogs"
+    ]) == ["arn:aws:logs:eu-west-2:123456789012:log-group:/aws/lambda/aws-sudoblark-production-monsternames-api-*"]
     error_message = "logs:* must resolve to this project's Lambda log groups."
+  }
+
+  assert {
+    condition = one([
+      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.resources
+      if statement.sid == "AllowReadWriteNameTables"
+    ]) == [for table in output.dynamodb_tables : table.arn]
+    error_message = "dynamodb:* must resolve to exactly the tables in dynamodb_tables.tf."
+  }
+}
+
+run "dynamodb_tables" {
+  command = plan
+
+  assert {
+    condition     = output.dynamodb_tables_map["goblin-first-name"].full_name == "aws-sudoblark-production-monsternames-api-goblin-first-name"
+    error_message = "Table names must carry the account-project-application prefix."
+  }
+
+  assert {
+    condition     = output.dynamodb_tables_map["goblin-first-name"].arn == "arn:aws:dynamodb:eu-west-2:123456789012:table/aws-sudoblark-production-monsternames-api-goblin-first-name"
+    error_message = "Table ARNs must be computed from the region, account ID and full name."
+  }
+
+  assert {
+    condition     = sum([for table in output.dynamodb_tables : length(table.items)]) == 320
+    error_message = "Every name in application/seed_data must load as a seed item."
+  }
+
+  assert {
+    condition     = contains(output.dynamodb_tables_map["skeleton-first-name"].items, "Reginald")
+    error_message = "Seed items must be the values in the table's JSON file."
   }
 }
 

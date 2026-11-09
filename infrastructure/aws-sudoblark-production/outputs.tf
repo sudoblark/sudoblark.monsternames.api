@@ -4,6 +4,12 @@ output "s3_buckets" {
   value       = module.s3.buckets
 }
 
+# Output all created DynamoDB tables
+output "dynamodb_tables" {
+  description = "All created DynamoDB tables with their properties"
+  value       = module.dynamodb.tables
+}
+
 # Output all created IAM roles
 output "iam_roles" {
   description = "All created IAM roles with their properties"

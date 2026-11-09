@@ -22,7 +22,7 @@
   Resource References (resolved in infrastructure.tf):
   - "assets" → S3 bucket ARN
   - "assets/*" → S3 bucket objects ARN
-  - "dynamodb:*" → DynamoDB tables ARN pattern
+  - "dynamodb:*" → ARNs of every table in dynamodb_tables.tf
   - "logs:*" → CloudWatch Logs ARN pattern
 
   Example:
@@ -91,14 +91,26 @@ locals {
       ]
       policy_statements = [
         {
-          sid    = "AllowDynamoDBFullAccess"
+          sid    = "AllowReadWriteNameTables"
           effect = "Allow"
           actions = [
-            "dynamodb:*"
+            "dynamodb:Scan",
+            "dynamodb:PutItem"
           ]
           resources = [
-            # Will be enriched with region and account
+            # Will be enriched to every table in dynamodb_tables.tf
             "dynamodb:*"
+          ]
+        },
+        {
+          sid    = "AllowListTables"
+          effect = "Allow"
+          actions = [
+            "dynamodb:ListTables"
+          ]
+          resources = [
+            # ListTables has no resource-level permissions
+            "*"
           ]
         },
         {

@@ -77,14 +77,16 @@ curl -X POST https://monsternames.sudoblark.com/skeleton \
 
 ## Configuration Format
 
+Each section maps a route to the Terraform-managed tables in `modules/data/dynamodb_tables.tf`:
+
 ```ini
 [/skeleton]
-first_name_table = monsternames.skeleton.first_name
-last_name_table = monsternames.skeleton.last_name
+first_name_table = aws-sudoblark-production-monsternames-api-skeleton-first-name
+last_name_table = aws-sudoblark-production-monsternames-api-skeleton-last-name
 
 [/orc]
-first_name_table = monsternames.orc.first_name
-last_name_table = monsternames.orc.last_name
+first_name_table = aws-sudoblark-production-monsternames-api-orc-first-name
+last_name_table = aws-sudoblark-production-monsternames-api-orc-last-name
 ```
 
 ## Dependencies

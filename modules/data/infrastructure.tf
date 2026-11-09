@@ -42,6 +42,36 @@ locals {
 }
 
 # ============================================================================
+# DynamoDB Tables Enrichment
+# ============================================================================
+
+locals {
+  # Enrich DynamoDB table data with computed values and seed items
+  dynamodb_tables_enriched = [
+    for table in local.dynamodb_tables : merge(
+      {
+        # Defaults
+        seed_data_path = null
+      },
+      table,
+      {
+        # Computed values
+        full_name = "${local.resource_prefix}-${table.name}"
+        arn       = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.resource_prefix}-${table.name}"
+
+        # Load seed items from the table's JSON file
+        items = try(table.seed_data_path, null) == null ? [] : jsondecode(file(table.seed_data_path))
+      }
+    )
+  ]
+
+  # Create lookup map for cross-referencing
+  dynamodb_tables_map = {
+    for table in local.dynamodb_tables_enriched : table.name => table
+  }
+}
+
+# ============================================================================
 # IAM Roles Enrichment
 # ============================================================================
 
@@ -64,18 +94,18 @@ locals {
           for stmt in role.policy_statements : merge(
             stmt,
             {
-              resources = [
+              resources = flatten([
                 for resource in stmt.resources :
                 # S3 bucket ARN resolution
-                resource == "assets" ? local.buckets_map["assets"].arn :
-                resource == "assets/*" ? "${local.buckets_map["assets"].arn}/*" :
-                # DynamoDB ARN resolution
-                resource == "dynamodb:*" ? "arn:aws:dynamodb:${local.region}:${local.account_id}:table/*" :
+                resource == "assets" ? [local.buckets_map["assets"].arn] :
+                resource == "assets/*" ? ["${local.buckets_map["assets"].arn}/*"] :
+                # DynamoDB ARN resolution: every table in dynamodb_tables.tf
+                resource == "dynamodb:*" ? [for table in local.dynamodb_tables_enriched : table.arn] :
                 # CloudWatch Logs ARN resolution
-                resource == "logs:*" ? "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*" :
+                resource == "logs:*" ? ["arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*"] :
                 # Pass through if already an ARN
-                resource
-              ]
+                [resource]
+              ])
             }
           )
         ]

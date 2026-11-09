@@ -5,6 +5,7 @@ module "lambda" {
   lambdas = module.data.lambdas
 
   depends_on = [
-    module.iam
+    module.iam,
+    module.dynamodb
   ]
 }

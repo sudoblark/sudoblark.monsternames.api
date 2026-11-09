@@ -12,6 +12,11 @@ MONSTERS_WITH_LAST_NAMES = ["goblin", "orc", "skeleton", "troll"]
 MONSTERS_WITH_FIRST_NAMES_ONLY = ["goatmen", "ogre"]
 
 
+def table_name(monster: str, field: str) -> str:
+    """Name of a monster's name table, as Terraform creates it."""
+    return f"aws-sudoblark-production-monsternames-api-{monster}-{field}"
+
+
 def invoke(event: dict[str, Any], context: Any) -> tuple:
     """Call the handler and decode its response body."""
     response = handler(event, context)
@@ -22,8 +27,8 @@ def invoke(event: dict[str, Any], context: Any) -> tuple:
 def test_get_returns_first_last_and_full_name(
     monster: str, seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
-    seed_table(f"monsternames.{monster}.first_name", ["Reginald"])
-    seed_table(f"monsternames.{monster}.last_name", ["Montgomery"])
+    seed_table(table_name(monster, "first-name"), ["Reginald"])
+    seed_table(table_name(monster, "last-name"), ["Montgomery"])
 
     status, body = invoke(api_event(f"/{monster}"), lambda_context)
 
@@ -39,7 +44,7 @@ def test_get_returns_first_last_and_full_name(
 def test_get_returns_first_name_only_for_monsters_without_last_names(
     monster: str, seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
-    seed_table(f"monsternames.{monster}.first_name", ["Fluffy"])
+    seed_table(table_name(monster, "first-name"), ["Fluffy"])
 
     status, body = invoke(api_event(f"/{monster}"), lambda_context)
 
@@ -51,7 +56,7 @@ def test_get_picks_a_name_from_the_table(
     seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
     names = {"Bomp", "Gog", "Wob"}
-    seed_table("monsternames.ogre.first_name", names)
+    seed_table(table_name("ogre", "first-name"), names)
 
     status, body = invoke(api_event("/ogre"), lambda_context)
 
