@@ -44,6 +44,13 @@ locals {
       bucket_name  = "assets"
       object_key   = "open_api_definitions/monsternames.yaml"
       content_type = "application/x-yaml"
+
+      # The API's spec without its integration blocks, so no ARNs are
+      # published. The template needs every variable, but these copies of the
+      # unresolved references are never rendered.
+      template_variables = merge(local.openapi_template_variables, {
+        include_integrations = "false"
+      })
     }
   ]
 }

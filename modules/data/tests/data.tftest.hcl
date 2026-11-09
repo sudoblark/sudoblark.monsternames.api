@@ -188,7 +188,10 @@ run "api_gateways" {
   }
 
   assert {
-    condition = output.api_gateways_map["backend"].template_variables == {
+    condition = {
+      for key, value in output.api_gateways_map["backend"].template_variables : key => value
+      if !contains(["monsters", "include_integrations"], key)
+      } == {
       backend_lambda_arn       = output.lambdas_map["backend"].arn
       aws_region_name          = "eu-west-2"
       asset_bucket_name        = output.buckets_map["assets"].full_name
@@ -215,5 +218,84 @@ run "s3_files" {
       for file in output.s3_files : file.bucket_id == output.buckets_map[file.bucket_name].full_name
     ])
     error_message = "bucket_name must resolve to the bucket's full name."
+  }
+}
+
+run "openapi_spec" {
+  command = plan
+
+  variables {
+    monster_paths = ["/goatmen", "/goblin", "/ogre", "/orc", "/skeleton", "/troll"]
+  }
+
+  assert {
+    condition = sort(keys(yamldecode(templatefile(
+      output.api_gateways_map["backend"].openapi_spec_path,
+      output.api_gateways_map["backend"].template_variables
+    )).paths)) == sort(concat(["/", "/openapi"], var.monster_paths))
+    error_message = "The API's spec must have a path for every monster in monsters.tf, plus / and /openapi."
+  }
+
+  assert {
+    condition = alltrue([
+      for path in var.monster_paths : strcontains(
+        yamldecode(templatefile(
+          output.api_gateways_map["backend"].openapi_spec_path,
+          output.api_gateways_map["backend"].template_variables
+        )).paths[path].get["x-amazon-apigateway-integration"].uri,
+        output.lambdas_map["backend"].arn
+      )
+    ])
+    error_message = "Every monster path in the API's spec must invoke the backend Lambda."
+  }
+
+  assert {
+    condition = [
+      for tag in yamldecode(templatefile(
+        output.api_gateways_map["backend"].openapi_spec_path,
+        output.api_gateways_map["backend"].template_variables
+      )).tags : tag.name
+    ] == ["goatmen", "goblin", "ogre", "orc", "skeleton", "troll"]
+    error_message = "The spec must have a tag for every monster in monsters.tf."
+  }
+
+  assert {
+    condition = (
+      yamldecode(templatefile(
+        output.api_gateways_map["backend"].openapi_spec_path,
+        output.api_gateways_map["backend"].template_variables
+      )).paths["/goatmen"].get.responses["200"]["$ref"] == "#/components/responses/200GetFirstName" &&
+      yamldecode(templatefile(
+        output.api_gateways_map["backend"].openapi_spec_path,
+        output.api_gateways_map["backend"].template_variables
+      )).paths["/goblin"].get.responses["200"]["$ref"] == "#/components/responses/200GetFirstAndLastName"
+    )
+    error_message = "A monster's 200 response must include last_name only when it has last names."
+  }
+
+  assert {
+    condition = sort(keys(yamldecode(templatefile(
+      output.s3_files_map["openapi-spec"].source_path,
+      output.s3_files_map["openapi-spec"].template_variables
+    )).paths)) == sort(concat(["/", "/openapi"], var.monster_paths))
+    error_message = "The public spec must document the same paths as the API's."
+  }
+
+  assert {
+    condition = alltrue([
+      for path, operations in yamldecode(templatefile(
+        output.s3_files_map["openapi-spec"].source_path,
+        output.s3_files_map["openapi-spec"].template_variables
+      )).paths : !contains(keys(operations.get), "x-amazon-apigateway-integration")
+    ])
+    error_message = "The public spec at /openapi must not publish integration blocks."
+  }
+
+  assert {
+    condition = !strcontains(templatefile(
+      output.s3_files_map["openapi-spec"].source_path,
+      output.s3_files_map["openapi-spec"].template_variables
+    ), "arn:aws:")
+    error_message = "The public spec at /openapi must not publish any ARNs."
   }
 }

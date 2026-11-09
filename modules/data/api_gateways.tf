@@ -45,19 +45,28 @@
 */
 
 locals {
+  # Variables for the OpenAPI spec template, shared with the public copy of the
+  # spec in s3_files.tf
+  openapi_template_variables = {
+    # Will be enriched with actual ARNs and values
+    backend_lambda_arn       = "backend"
+    aws_region_name          = "region"
+    asset_bucket_name        = "assets"
+    swagger_index_path       = "swagger_ui/index.html"
+    api_gateway_iam_role_arn = "api-gateway"
+
+    # Each monster in monsters.tf gets a path and a tag
+    monsters = jsonencode(local.monsters)
+  }
+
   api_gateways = [
     {
       name              = "backend"
       description       = "This is a relatively simple REST API, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
       openapi_spec_path = "../../application/open_api_definitions/monsternames.yaml"
-      template_variables = {
-        # Will be enriched with actual ARNs and values
-        backend_lambda_arn       = "backend"
-        aws_region_name          = "region"
-        asset_bucket_name        = "assets"
-        swagger_index_path       = "swagger_ui/index.html"
-        api_gateway_iam_role_arn = "api-gateway"
-      }
+      template_variables = merge(local.openapi_template_variables, {
+        include_integrations = "true"
+      })
       allowed_lambda_names = ["backend"]
       quota_limit          = 500
       rate_limit           = 100

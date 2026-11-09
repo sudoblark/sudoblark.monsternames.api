@@ -4,6 +4,10 @@
 #
 # This source code is licensed under the BSD 3 clause license found in the
 # LICENSE file in the root directory of this source tree.
+#
+# Terraform template: monster paths and tags come from modules/data/monsters.tf.
+# include_integrations is "false" for the public copy served at /openapi, which
+# leaves out the x-amazon-apigateway-integration blocks and the ARNs in them.
 
 openapi: 3.0.1
 info:
@@ -24,22 +28,15 @@ externalDocs:
 servers:
   - url: https://monsternames.sudoblark.com
 tags:
-  - name: goatmen
-    description: Names themed on cute fluffy animals
-  - name: goblin
-    description: Names themed on washed out wrestlers/average blokes
-  - name: ogre
-    description: Names themed on cavemen like speech
-  - name: orc
-    description: Names themed on {noun} + {silly moniker}
-  - name: skeleton
-    description: Names themed on 18th Century British Gentlemen
-  - name: troll
-    description: Names themed on a Scandinavian twist
+%{ for monster in jsondecode(monsters) ~}
+  - name: ${monster.name}
+    description: ${jsonencode(monster.description)}
+%{ endfor ~}
 paths:
   /:
     get:
       summary: Show Swagger UI
+%{ if include_integrations == "true" ~}
       x-amazon-apigateway-integration:
         httpMethod: "GET"
         uri: "arn:aws:apigateway:${aws_region_name}:s3:path//${asset_bucket_name}/${swagger_index_path}"
@@ -53,6 +50,7 @@ paths:
               "method.response.header.Content-Type": "'text/html'"
             }
           }
+%{ endif ~}
       responses:
         "200":
           description: "Successful request"
@@ -68,6 +66,7 @@ paths:
     get:
       summary: Get OpenAPI specification
       description: Returns the OpenAPI 3.0 specification for this API
+%{ if include_integrations == "true" ~}
       x-amazon-apigateway-integration:
         httpMethod: "GET"
         uri: "arn:aws:apigateway:${aws_region_name}:s3:path//${asset_bucket_name}/open_api_definitions/monsternames.yaml"
@@ -80,6 +79,7 @@ paths:
             responseParameters:
               "method.response.header.Content-Type": "'application/x-yaml'"
               "method.response.header.Access-Control-Allow-Origin": "'*'"
+%{ endif ~}
       responses:
         "200":
           description: "OpenAPI specification in YAML format"
@@ -97,101 +97,25 @@ paths:
                 type: string
                 description: CORS header for Swagger UI
 
-  /goatmen:
+%{ for monster in jsondecode(monsters) ~}
+  /${monster.name}:
     get:
       summary: Retrieve a pseudo-random name
       tags:
-        - goatmen
+        - ${monster.name}
+%{ if include_integrations == "true" ~}
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
         type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
+        passthroughBehavior: "when_no_match"
+%{ endif ~}
       responses:
         "200":
-          $ref: "#/components/responses/200GetFirstName"
+          $ref: "#/components/responses/${try(monster.last_names_path, null) == null ? "200GetFirstName" : "200GetFirstAndLastName"}"
         "500":
           $ref: "#/components/responses/500InternalError"
-
-  /goblin:
-    get:
-      summary: Retrieve a pseudo-random name
-      tags:
-        - goblin
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
-        type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
-      responses:
-        "200":
-          $ref: "#/components/responses/200GetFirstAndLastName"
-        "500":
-          $ref: "#/components/responses/500InternalError"
-
-  /ogre:
-    get:
-      summary: Retrieve a pseudo-random name
-      tags:
-        - ogre
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
-        type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
-      responses:
-        "200":
-          $ref: "#/components/responses/200GetFirstName"
-        "500":
-          $ref: "#/components/responses/500InternalError"
-
-  /orc:
-    get:
-      summary: Retrieve a pseudo-random name
-      tags:
-        - orc
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
-        type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
-      responses:
-        "200":
-          $ref: "#/components/responses/200GetFirstAndLastName"
-        "500":
-          $ref: "#/components/responses/500InternalError"
-
-  /skeleton:
-    get:
-      summary: Retrieve a pseudo-random name
-      tags:
-        - skeleton
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
-        type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
-      responses:
-        "200":
-          $ref: "#/components/responses/200GetFirstAndLastName"
-        "500":
-          $ref: "#/components/responses/500InternalError"
-
-  /troll:
-    get:
-      summary: Retrieve a pseudo-random name
-      tags:
-        - troll
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri: "arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${backend_lambda_arn}/invocations"
-        type: "aws_proxy"
-        passthroughBehavior : "when_no_match"
-      responses:
-        "200":
-          $ref: "#/components/responses/200GetFirstAndLastName"
-        "500":
-          $ref: "#/components/responses/500InternalError"
+%{ endfor ~}
 
 components:
   headers:
