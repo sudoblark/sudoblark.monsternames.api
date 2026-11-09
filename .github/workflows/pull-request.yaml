@@ -24,7 +24,7 @@ jobs:
         uses: dflook/terraform-fmt-check@v2
         id: fmt-check
         with:
-          path: ./infrastructure/aws-sudoblark-production
+          path: .
 
   validate:
     name: Terraform Validate
@@ -99,6 +99,49 @@ jobs:
       - name: Terraform Test - Data Module
         run: terraform test
         working-directory: ./modules/data
+
+  python_lint:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+  python_test:
+    name: Python Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run pytest
+        run: pytest
 
   plan:
     name: Terraform Plan
