@@ -52,8 +52,17 @@ coverage.xml
 *.tfstate
 *.tfstate.*
 *.tfvars
+*.tfvars.json
 *.tfplan
 .terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
 
 # Lambda packages
 *.zip
@@ -63,15 +72,6 @@ lambda-packages/*/venv/
 
 # DynamoDB exports
 dynamodb-exports/
-
-# Old infrastructure (v1) - keeping for reference but not tracking changes
-infrastructure/modules/iam_roles/
-infrastructure/modules/lambda/
-infrastructure/modules/s3_bucket/
-infrastructure/modules/api_gateway_rest_api/
-infrastructure/modules/additional_s3_files/
-infrastructure/modules/application_registry/
-infrastructure/sudoblark/
 
 # Translations
 *.mo
@@ -208,44 +208,6 @@ fabric.properties
 
 # idea folder, uncomment if you don't need it
 .idea
-
-### Terraform template
-# Local .terraform directories
-**/.terraform/*
-
-# .tfstate files
-*.tfstate
-*.tfstate.*
-
-# Crash log files
-crash.log
-crash.*.log
-
-# Exclude all .tfvars files, which are likely to contain sensitive data, such as
-# password, private keys, and other secrets. These should not be part of version
-# control as they are data points which are potentially sensitive and subject
-# to change depending on the environment.
-*.tfvars
-*.tfvars.json
-
-# Ignore override files as they are usually used to override resources locally and so
-# are not checked in
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# Include override files you do wish to add to version control using negated pattern
-# !example_override.tf
-
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
-
-# Ignore CLI configuration files
-.terraformrc
-terraform.rc
-# Lock file automatically managed by Terraform
-**/.terraform.lock.hcl
 
 # PyTest
 **/.pytest_cache
