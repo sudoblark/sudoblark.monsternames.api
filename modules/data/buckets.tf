@@ -7,7 +7,7 @@
 
   Optional fields:
   - folder_paths (list(string)): Folders to pre-create in the bucket (default: [])
-  - days_retention (number): Days to retain objects before deletion (default: 365)
+  - days_retention (number): Days to keep objects before they expire (default: null, objects never expire)
   - multipart_retention (number): Days to keep incomplete multipart uploads (default: 7)
   - enable_event_bridge (bool): Whether to enable EventBridge notifications (default: false)
   - log_bucket (string): Target bucket for access logs (default: null)
@@ -22,20 +22,18 @@
 
   Example:
   {
-    name             = "assets"
-    versioning       = true
-    folder_paths     = ["swagger_ui/"]
-    days_retention   = 365
+    name         = "assets"
+    versioning   = false
+    folder_paths = ["swagger_ui/"]
   }
 */
 
 locals {
   buckets = [
     {
-      name           = "assets"
-      versioning     = true
-      folder_paths   = ["swagger_ui/"]
-      days_retention = 365
+      name         = "assets"
+      versioning   = false
+      folder_paths = ["swagger_ui/"]
     }
   ]
 }

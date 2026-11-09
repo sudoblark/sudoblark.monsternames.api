@@ -9,7 +9,7 @@ variable "buckets" {
     arn                 = string
     versioning          = bool
     folder_paths        = list(string)
-    days_retention      = number
+    days_retention      = optional(number)
     multipart_retention = number
     enable_event_bridge = bool
     log_bucket          = optional(string)

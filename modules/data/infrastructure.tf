@@ -23,7 +23,7 @@ locals {
         project             = local.project
         application         = local.application
         folder_paths        = []
-        days_retention      = 365
+        days_retention      = null
         multipart_retention = 7
         enable_event_bridge = false
         log_bucket          = null

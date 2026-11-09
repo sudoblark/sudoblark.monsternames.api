@@ -46,16 +46,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
 
   bucket = aws_s3_bucket.bucket[each.key].id
 
-  rule {
-    id     = "expire-old-objects"
-    status = "Enabled"
+  dynamic "rule" {
+    for_each = each.value.days_retention == null ? [] : [each.value.days_retention]
 
-    expiration {
-      days = each.value.days_retention
-    }
+    content {
+      id     = "expire-old-objects"
+      status = "Enabled"
 
-    noncurrent_version_expiration {
-      noncurrent_days = each.value.days_retention
+      expiration {
+        days = rule.value
+      }
+
+      noncurrent_version_expiration {
+        noncurrent_days = rule.value
+      }
     }
   }
 
