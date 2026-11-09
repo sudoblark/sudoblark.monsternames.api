@@ -59,7 +59,7 @@ locals {
         "powertools-python"
       ]
       environment_variables = {
-        LOG_LEVEL   = "DEBUG"
+        LOG_LEVEL   = "INFO"
         CONFIG_FILE = "config.ini"
       }
     }

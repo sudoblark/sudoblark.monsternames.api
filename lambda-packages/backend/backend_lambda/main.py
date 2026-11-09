@@ -63,7 +63,6 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, An
         http_method: str = event.http_method.lower()
         
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
-        logger.debug(f"Raw event: {event.raw_event}")
 
         # Parse request body
         payload: Dict[str, Any] = {}
