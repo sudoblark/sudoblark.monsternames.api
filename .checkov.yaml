@@ -7,6 +7,7 @@ skip-check:
   - CKV_AWS_21 # Versioning is overkill for a simple SwaggerUI
   - CKV_AWS_144 # Cross-account replication is also overkill
   - CKV_AWS_145 # KMS is also overkill for this repo
+  - CKV_AWS_300 # False positive - the s3 module's static abort rule is missed beside its dynamic expiry rule
 
   # API Gateway - Cost-related checks that we are consciously ignoring for now
   - CKV_AWS_73 # X-Ray tracing adds costs for trace recording/analysis
