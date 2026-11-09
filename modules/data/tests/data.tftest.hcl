@@ -96,6 +96,15 @@ run "dynamodb_tables" {
   command = plan
 
   assert {
+    condition = sort(keys(output.dynamodb_tables_map)) == tolist([
+      "goatmen-first-name", "goblin-first-name", "goblin-last-name", "ogre-first-name",
+      "orc-first-name", "orc-last-name", "skeleton-first-name", "skeleton-last-name",
+      "troll-first-name", "troll-last-name",
+    ])
+    error_message = "Each monster in monsters.tf must get one table per name list, and no others."
+  }
+
+  assert {
     condition     = output.dynamodb_tables_map["goblin-first-name"].full_name == "aws-sudoblark-production-monsternames-api-goblin-first-name"
     error_message = "Table names must carry the account-project-application prefix."
   }
