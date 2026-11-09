@@ -52,8 +52,14 @@ resource "aws_api_gateway_stage" "production" {
   ]
 }
 
+# Quotas for API key holders. A usage plan only limits callers who send a key,
+# so APIs without keys get none and rely on the stage throttling below.
 resource "aws_api_gateway_usage_plan" "plan" {
-  for_each = local.api_gateways_map
+  for_each = {
+    for key, api in local.api_gateways_map :
+    key => api
+    if length(api.api_keys) > 0
+  }
 
   name        = "${each.value.full_name}-plan"
   description = "Usage plan for ${each.value.full_name}"
@@ -136,6 +142,7 @@ resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
+# Stage-wide settings, including throttling for every caller of every method
 resource "aws_api_gateway_method_settings" "settings" {
   for_each = local.api_gateways_map
 
@@ -144,9 +151,11 @@ resource "aws_api_gateway_method_settings" "settings" {
   method_path = "*/*"
 
   settings {
-    metrics_enabled    = true
-    logging_level      = "INFO"
-    data_trace_enabled = false
+    metrics_enabled        = true
+    logging_level          = "INFO"
+    data_trace_enabled     = false
+    throttling_rate_limit  = each.value.rate_limit
+    throttling_burst_limit = each.value.burst_limit
   }
 }
 

@@ -9,16 +9,17 @@
 
   Optional fields:
   - allowed_lambda_names (list(string)): Lambda names to grant invoke permissions (default: [])
-  - quota_limit (number): Maximum requests per quota period (default: 10)
-  - quota_offset (number): Request offset for initial period (default: 0)
+  - rate_limit (number): Stage throttling, steady-state requests per second for every caller (default: 10)
+  - burst_limit (number): Stage throttling, requests allowed in a burst (default: 5)
+  - api_keys (list(string)): API key names to create, with a usage plan for their quota (default: [])
+  - quota_limit (number): Requests per quota period for each key (default: 10)
+  - quota_offset (number): Request offset for the initial period (default: 0)
   - quota_period (string): DAY, WEEK, or MONTH (default: "DAY")
-  - burst_limit (number): Maximum burst rate limit (default: 5)
-  - rate_limit (number): Steady-state rate limit (default: 10)
-  - api_keys (list(string)): API key names to create (default: [], typically not needed)
 
   Constraints:
   - openapi_spec_path must point to valid OpenAPI 3.0+ specification
   - allowed_lambda_names must reference existing Lambdas in lambdas.tf
+  - quota_* fields only apply to APIs with api_keys
   - quota_period must be one of: DAY, WEEK, MONTH
   - Template variables reference other primitives through their maps
     (e.g. local.lambdas_map["backend"].arn) rather than writing names by hand
@@ -35,7 +36,6 @@
       api_gateway_iam_role_arn = local.iam_roles_map["api-gateway"].arn
     }
     allowed_lambda_names = ["backend"]
-    quota_limit          = 500
     rate_limit           = 100
   }
 */
@@ -63,7 +63,6 @@ locals {
         include_integrations = "true"
       })
       allowed_lambda_names = ["backend"]
-      quota_limit          = 500
       rate_limit           = 100
       custom_domain = {
         subdomain_name = "monsternames"
