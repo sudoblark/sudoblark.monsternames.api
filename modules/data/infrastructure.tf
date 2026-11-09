@@ -76,7 +76,7 @@ locals {
 # ============================================================================
 
 locals {
-  # Enrich IAM role data with computed values and resolve cross-references
+  # Enrich IAM role data with computed values
   iam_roles_enriched = [
     for role in local.iam_roles : merge(
       {
@@ -88,27 +88,6 @@ locals {
         # Computed values
         full_name = "${local.resource_prefix}-${role.name}"
         arn       = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${role.name}"
-
-        # Resolve policy statement resources with actual ARNs
-        policy_statements = [
-          for stmt in role.policy_statements : merge(
-            stmt,
-            {
-              resources = flatten([
-                for resource in stmt.resources :
-                # S3 bucket ARN resolution
-                resource == "assets" ? [local.buckets_map["assets"].arn] :
-                resource == "assets/*" ? ["${local.buckets_map["assets"].arn}/*"] :
-                # DynamoDB ARN resolution: every table in dynamodb_tables.tf
-                resource == "dynamodb:*" ? [for table in local.dynamodb_tables_enriched : table.arn] :
-                # CloudWatch Logs ARN resolution
-                resource == "logs:*" ? ["arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*"] :
-                # Pass through if already an ARN
-                [resource]
-              ])
-            }
-          )
-        ]
       }
     )
   ]
@@ -144,15 +123,6 @@ locals {
         arn           = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.resource_prefix}-${lambda.name}"
         role_arn      = local.iam_roles_map[lambda.role_name].arn
         function_name = "${local.resource_prefix}-${lambda.name}"
-
-        # Resolve Lambda layers to full ARNs
-        lambda_layers = [
-          for layer in lambda.lambda_layers :
-          # PowerTools Python layer
-          layer == "powertools-python" ? "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73" :
-          # Pass through if already an ARN
-          layer
-        ]
       }
     )
   ]
@@ -168,9 +138,6 @@ locals {
 # ============================================================================
 
 locals {
-  # Determine base domain based on environment
-  base_domain = local.account == "aws-sudoblark-production" ? "sudoblark.com" : "${replace(local.account, "aws-sudoblark-", "")}.sudoblark.com"
-
   # Enrich API Gateway data with computed values and resolve cross-references
   api_gateways_enriched = [
     for api in local.api_gateways : merge(
@@ -195,23 +162,6 @@ locals {
           for lambda_name in api.allowed_lambda_names :
           local.lambdas_map[lambda_name].function_name
         ]
-
-        # Resolve template variables
-        template_variables = {
-          for key, value in api.template_variables :
-          key => (
-            # Lambda ARN resolution
-            value == "backend" && key == "backend_lambda_arn" ? local.lambdas_map["backend"].arn :
-            # Region resolution
-            value == "region" ? local.region :
-            # Bucket name resolution
-            value == "assets" && key == "asset_bucket_name" ? local.buckets_map["assets"].full_name :
-            # IAM role ARN resolution
-            value == "api-gateway" && key == "api_gateway_iam_role_arn" ? local.iam_roles_map["api-gateway"].arn :
-            # Pass through other values
-            value
-          )
-        }
       },
       # Merge custom domain if present
       api.custom_domain != null ? {

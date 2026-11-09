@@ -18,6 +18,9 @@ locals {
   # Common resource prefix
   resource_prefix = "${local.account}-${local.project}-${local.application}"
 
+  # Domain that custom domains' subdomain_name values sit under
+  base_domain = "sudoblark.com"
+
   # Default tags applied to all resources
   default_tags = {
     environment = local.account

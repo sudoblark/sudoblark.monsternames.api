@@ -10,7 +10,7 @@
     - sid (string): Statement ID
     - effect (string): Allow or Deny
     - actions (list(string)): List of IAM actions
-    - resources (list(string)): Short names or ARNs (enriched in infrastructure.tf)
+    - resources (list(string)): ARNs, taken from other primitives' lookup maps where they exist
 
   Optional fields:
   - path (string): IAM path for the role (default: "/")
@@ -18,12 +18,8 @@
   Constraints:
   - Full role name must be less than 64 characters
   - SID must be alphanumeric (no spaces or special characters)
-
-  Resource References (resolved in infrastructure.tf):
-  - "assets" → S3 bucket ARN
-  - "assets/*" → S3 bucket objects ARN
-  - "dynamodb:*" → ARNs of every table in dynamodb_tables.tf
-  - "logs:*" → CloudWatch Logs ARN pattern
+  - Reference other primitives through their maps (e.g. local.buckets_map["assets"].arn)
+    rather than writing their names by hand
 
   Example:
   {
@@ -39,7 +35,7 @@
         sid       = "AllowS3Access"
         effect    = "Allow"
         actions   = ["s3:GetObject"]
-        resources = ["assets/*"]  # Resolved to full ARN
+        resources = ["${local.buckets_map["assets"].arn}/*"]
       }
     ]
   }
@@ -64,8 +60,7 @@ locals {
             "s3:GetBucketAcl"
           ]
           resources = [
-            # Will be enriched to use buckets_map
-            "assets"
+            local.buckets_map["assets"].arn
           ]
         },
         {
@@ -75,8 +70,7 @@ locals {
             "s3:GetObject"
           ]
           resources = [
-            # Will be enriched to use buckets_map
-            "assets/*"
+            "${local.buckets_map["assets"].arn}/*"
           ]
         }
       ]
@@ -96,9 +90,9 @@ locals {
           actions = [
             "dynamodb:Scan"
           ]
+          # Every table in dynamodb_tables.tf
           resources = [
-            # Will be enriched to every table in dynamodb_tables.tf
-            "dynamodb:*"
+            for table in local.dynamodb_tables_map : table.arn
           ]
         },
         {
@@ -109,9 +103,9 @@ locals {
             "logs:CreateLogStream",
             "logs:PutLogEvents"
           ]
+          # This project's Lambda log groups
           resources = [
-            # Will be enriched with region, account, and resource prefix
-            "logs:*"
+            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*"
           ]
         }
       ]

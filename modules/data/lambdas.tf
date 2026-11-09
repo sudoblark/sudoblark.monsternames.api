@@ -13,7 +13,7 @@
   - timeout (number): Timeout in seconds (default: 900)
   - memory (number): Memory in MB (default: 512)
   - environment_variables (map(string)): Environment variables (default: {})
-  - lambda_layers (list(string)): Layer names or ARNs (default: [])
+  - lambda_layers (list(string)): Layer ARNs, in this region (default: [])
   - storage (number): Ephemeral storage in MB (default: 512)
   - reserved_concurrent_executions (number): Concurrency limit (default: -1, unreserved)
 
@@ -21,9 +21,6 @@
   - Full Lambda name must be less than 64 characters
   - role_name must reference an existing IAM role in iam_roles.tf
   - zip_file_path must exist and contain valid deployment package
-
-  Lambda Layer References (resolved in infrastructure.tf):
-  - "powertools-python" → Full ARN for AWS Lambda Powertools Python layer
 
   Example:
   {
@@ -35,7 +32,7 @@
     zip_file_path = "./lambda-packages/backend.zip"
     timeout     = 60
     memory      = 256
-    lambda_layers = ["powertools-python"]  # Resolved to full ARN
+    lambda_layers = ["arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73"]
     environment_variables = {
       LOG_LEVEL = "INFO"
     }
@@ -54,8 +51,8 @@ locals {
       timeout       = 29
       memory        = 256
       lambda_layers = [
-        # Will be enriched with region
-        "powertools-python"
+        # AWS Lambda Powertools for Python, which AWS publishes in every region
+        "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73"
       ]
       environment_variables = {
         LOG_LEVEL = "INFO"

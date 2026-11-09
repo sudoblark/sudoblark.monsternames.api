@@ -5,7 +5,7 @@
   - name (string): Short name for the API Gateway (auto-prefixed with aws-sudoblark-production-monsternames-api)
   - description (string): Human-friendly description
   - openapi_spec_path (string): Path to OpenAPI specification file
-  - template_variables (map(string)): Variables to interpolate into OpenAPI spec (short names)
+  - template_variables (map(string)): Variables to interpolate into the OpenAPI spec
 
   Optional fields:
   - allowed_lambda_names (list(string)): Lambda names to grant invoke permissions (default: [])
@@ -20,12 +20,8 @@
   - openapi_spec_path must point to valid OpenAPI 3.0+ specification
   - allowed_lambda_names must reference existing Lambdas in lambdas.tf
   - quota_period must be one of: DAY, WEEK, MONTH
-
-  Template Variable References (resolved in infrastructure.tf):
-  - Lambda names → Full Lambda ARNs
-  - Bucket names → Full bucket names
-  - IAM role names → Full role ARNs
-  - "region" → AWS region
+  - Template variables reference other primitives through their maps
+    (e.g. local.lambdas_map["backend"].arn) rather than writing names by hand
 
   Example:
   {
@@ -33,10 +29,10 @@
     description         = "Monster Names API"
     openapi_spec_path   = "./application/openapi/spec.yaml"
     template_variables = {
-      backend_lambda_arn       = "backend"      # Resolved to ARN
-      aws_region_name          = "region"       # Resolved to actual region
-      asset_bucket_name        = "assets"       # Resolved to full name
-      api_gateway_iam_role_arn = "api-gateway"  # Resolved to ARN
+      backend_lambda_arn       = local.lambdas_map["backend"].arn
+      aws_region_name          = local.region
+      asset_bucket_name        = local.buckets_map["assets"].full_name
+      api_gateway_iam_role_arn = local.iam_roles_map["api-gateway"].arn
     }
     allowed_lambda_names = ["backend"]
     quota_limit          = 500
@@ -48,12 +44,11 @@ locals {
   # Variables for the OpenAPI spec template, shared with the public copy of the
   # spec in s3_files.tf
   openapi_template_variables = {
-    # Will be enriched with actual ARNs and values
-    backend_lambda_arn       = "backend"
-    aws_region_name          = "region"
-    asset_bucket_name        = "assets"
+    backend_lambda_arn       = local.lambdas_map["backend"].arn
+    aws_region_name          = local.region
+    asset_bucket_name        = local.buckets_map["assets"].full_name
     swagger_index_path       = "swagger_ui/index.html"
-    api_gateway_iam_role_arn = "api-gateway"
+    api_gateway_iam_role_arn = local.iam_roles_map["api-gateway"].arn
 
     # Each monster in monsters.tf gets a path and a tag
     monsters = jsonencode(local.monsters)
