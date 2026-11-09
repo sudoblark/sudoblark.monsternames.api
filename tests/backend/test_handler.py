@@ -1,7 +1,8 @@
 """Behaviour tests for the backend Lambda handler."""
 
 import json
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -11,7 +12,7 @@ MONSTERS_WITH_LAST_NAMES = ["goblin", "orc", "skeleton", "troll"]
 MONSTERS_WITH_FIRST_NAMES_ONLY = ["goatmen", "ogre"]
 
 
-def invoke(event: Dict[str, Any], context: Any) -> tuple:
+def invoke(event: dict[str, Any], context: Any) -> tuple:
     """Call the handler and decode its response body."""
     response = handler(event, context)
     return response["statusCode"], json.loads(response["body"])

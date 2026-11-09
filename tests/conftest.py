@@ -2,7 +2,8 @@
 
 import json
 import os
-from typing import Any, Callable, Dict, Iterable, Iterator, Optional
+from collections.abc import Callable, Iterable, Iterator
+from typing import Any
 from unittest.mock import MagicMock
 
 import boto3
@@ -51,10 +52,10 @@ def seed_table(dynamodb: Any) -> Callable[[str, Iterable[str]], None]:
 
 
 @pytest.fixture
-def api_event() -> Callable[..., Dict[str, Any]]:
+def api_event() -> Callable[..., dict[str, Any]]:
     """Build an API Gateway proxy event for a path and method."""
 
-    def build(path: str, method: str = "GET", body: Optional[Any] = None) -> Dict[str, Any]:
+    def build(path: str, method: str = "GET", body: Any | None = None) -> dict[str, Any]:
         return {
             "resource": path,
             "path": path,

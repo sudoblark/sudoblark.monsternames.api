@@ -1,3 +1,18 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["lambda-packages/backend"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = [".", "lambda-packages/backend"]
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # import sorting
+  "B",  # bugbear
+  "UP", # pyupgrade
+]

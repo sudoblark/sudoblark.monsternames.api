@@ -8,7 +8,7 @@ including retrieving random names and creating new name entries in DynamoDB.
 import logging
 import os
 import random
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
@@ -39,12 +39,8 @@ class MonsternameService:
     """
 
     # DynamoDB table schema configuration
-    TABLE_ATTRIBUTES: List[Dict[str, str]] = [
-        {"AttributeName": "value", "AttributeType": "S"}
-    ]
-    TABLE_SCHEMA: List[Dict[str, str]] = [
-        {"AttributeName": "value", "KeyType": "HASH"}
-    ]
+    TABLE_ATTRIBUTES: list[dict[str, str]] = [{"AttributeName": "value", "AttributeType": "S"}]
+    TABLE_SCHEMA: list[dict[str, str]] = [{"AttributeName": "value", "KeyType": "HASH"}]
     BILLING_MODE: str = "PAY_PER_REQUEST"
 
     def __init__(self, first_name_table: str, last_name_table: str):
@@ -65,12 +61,12 @@ class MonsternameService:
         self.last_name_table: str = last_name_table
 
         # Initialize DynamoDB client (supports local endpoint for testing)
-        dynamodb_endpoint: Optional[str] = os.environ.get("DYNAMODB_ENDPOINT")
+        dynamodb_endpoint: str | None = os.environ.get("DYNAMODB_ENDPOINT")
         self.dynamo_db_client = boto3.resource("dynamodb", endpoint_url=dynamodb_endpoint)
 
         logger.debug(f"Initialized service with tables: {first_name_table}, {last_name_table}")
 
-    def get_random_name(self) -> Tuple[int, Dict[str, Any]]:
+    def get_random_name(self) -> tuple[int, dict[str, Any]]:
         """
         Retrieve random name components from DynamoDB tables.
 
@@ -90,13 +86,13 @@ class MonsternameService:
             >>> print(response)
             {'first_name': 'Bjorn', 'last_name': 'Ironforge', 'full_name': 'Bjorn Ironforge'}
         """
-        response: Dict[str, str] = {}
-        full_name_parts: List[str] = []
+        response: dict[str, str] = {}
+        full_name_parts: list[str] = []
 
         # Process both first and last name tables
-        tables_config: List[Dict[str, str]] = [
+        tables_config: list[dict[str, str]] = [
             {"field": "first_name", "table": self.first_name_table},
-            {"field": "last_name", "table": self.last_name_table}
+            {"field": "last_name", "table": self.last_name_table},
         ]
 
         for config in tables_config:
@@ -111,7 +107,7 @@ class MonsternameService:
             try:
                 table = self.dynamo_db_client.Table(config["table"])
                 scan_result = table.scan()
-                items: List[Dict[str, Any]] = scan_result.get("Items", [])
+                items: list[dict[str, Any]] = scan_result.get("Items", [])
 
                 if items:
                     random_item: str = random.choice(items)["value"]
@@ -124,7 +120,7 @@ class MonsternameService:
             except ClientError as e:
                 logger.error(
                     f"Failed to scan table {config['table']}: {e.response['Error']['Code']}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
         # Build response
@@ -134,7 +130,7 @@ class MonsternameService:
         else:
             return 500, {"error": "Unable to find name entries in database"}
 
-    def create_name(self, payload: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    def create_name(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         """
         Create new name entries in DynamoDB tables.
 
@@ -159,16 +155,16 @@ class MonsternameService:
             >>> print(response)
             {'message': "Successfully inserted 'Grug' as valid 'first_name'."}
         """
-        response: Dict[str, str] = {}
-        messages: List[str] = []
+        response: dict[str, str] = {}
+        messages: list[str] = []
         has_error: bool = False
 
         logger.debug(f"Processing create request with payload: {payload}")
 
         # Process both first and last name tables
-        tables_config: List[Dict[str, str]] = [
+        tables_config: list[dict[str, str]] = [
             {"field": "first_name", "table": self.first_name_table},
-            {"field": "last_name", "table": self.last_name_table}
+            {"field": "last_name", "table": self.last_name_table},
         ]
 
         for config in tables_config:
@@ -212,7 +208,8 @@ class MonsternameService:
 
             except ClientError as e:
                 has_error = True
-                error_msg = f"Unable to insert '{value}' as valid '{field}': {e.response['Error']['Code']}"
+                error_code = e.response["Error"]["Code"]
+                error_msg = f"Unable to insert '{value}' as valid '{field}': {error_code}"
                 messages.append(error_msg)
                 logger.error(error_msg, exc_info=True)
                 break
@@ -242,7 +239,7 @@ class MonsternameService:
             logger.error(f"Failed to list tables: {e.response['Error']['Code']}", exc_info=True)
             return False
 
-    def _get_or_create_table(self, table_name: str) -> Tuple[Optional[Any], str]:
+    def _get_or_create_table(self, table_name: str) -> tuple[Any | None, str]:
         """
         Get existing table or create if it doesn't exist.
 
@@ -259,7 +256,7 @@ class MonsternameService:
         else:
             return self._create_table(table_name)
 
-    def _create_table(self, table_name: str) -> Tuple[Optional[Any], str]:
+    def _create_table(self, table_name: str) -> tuple[Any | None, str]:
         """
         Create a new DynamoDB table.
 
@@ -276,7 +273,7 @@ class MonsternameService:
                 TableName=table_name,
                 KeySchema=self.TABLE_SCHEMA,
                 AttributeDefinitions=self.TABLE_ATTRIBUTES,
-                BillingMode=self.BILLING_MODE
+                BillingMode=self.BILLING_MODE,
             )
             new_table.wait_until_exists()
             logger.info(f"Successfully created table: {table_name}")

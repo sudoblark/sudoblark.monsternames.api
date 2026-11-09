@@ -14,7 +14,7 @@ Environment Variables:
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.utilities.data_classes import (
     APIGatewayProxyEvent,
@@ -32,7 +32,7 @@ logger.setLevel(LOG_LEVEL)
 
 
 @event_source(data_class=APIGatewayProxyEvent)
-def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, Any]:
+def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, Any]:
     """
     Lambda handler for MonsterNames API requests.
 
@@ -61,11 +61,11 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, An
         # Parse request
         endpoint: str = event.path
         http_method: str = event.http_method.lower()
-        
+
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
 
         # Parse request body
-        payload: Dict[str, Any] = {}
+        payload: dict[str, Any] = {}
         if event.body:
             try:
                 payload = json.loads(event.body) if isinstance(event.body, str) else event.body
@@ -73,20 +73,17 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, An
                 logger.error(f"Invalid JSON in request body: {str(e)}")
                 return {
                     "statusCode": 400,
-                    "body": json.dumps({"error": "Invalid JSON in request body"})
+                    "body": json.dumps({"error": "Invalid JSON in request body"}),
                 }
 
         logger.debug(f"Parsed payload: {payload}")
 
         # Load configuration and check endpoint exists
         config_parser: ConfigParser = ConfigParser(config_path)
-        
+
         if not config_parser.endpoint_exists(endpoint):
             logger.warning(f"Endpoint not found: {endpoint}")
-            return {
-                "statusCode": 404,
-                "body": json.dumps({"error": "Endpoint does not exist"})
-            }
+            return {"statusCode": 404, "body": json.dumps({"error": "Endpoint does not exist"})}
 
         # Get table configuration for endpoint
         first_name_table: str = config_parser.get_first_name_table(endpoint)
@@ -96,8 +93,7 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, An
 
         # Initialize service
         service: MonsternameService = MonsternameService(
-            first_name_table=first_name_table,
-            last_name_table=last_name_table
+            first_name_table=first_name_table, last_name_table=last_name_table
         )
 
         # Route to appropriate method
@@ -107,31 +103,18 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, An
             status_code, response_body = service.create_name(payload)
         else:
             logger.warning(f"Unsupported HTTP method: {http_method}")
-            return {
-                "statusCode": 405,
-                "body": json.dumps({
-                    "error": f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
-                })
-            }
+            error = f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
+            return {"statusCode": 405, "body": json.dumps({"error": error})}
 
         logger.info(f"Request completed with status {status_code}")
         logger.debug(f"Response body: {response_body}")
 
-        return {
-            "statusCode": status_code,
-            "body": json.dumps(response_body)
-        }
+        return {"statusCode": status_code, "body": json.dumps(response_body)}
 
     except ValueError as e:
         logger.error(f"Configuration error: {str(e)}", exc_info=True)
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": "Configuration error"})
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": "Configuration error"})}
 
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": "Internal server error"})
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": "Internal server error"})}

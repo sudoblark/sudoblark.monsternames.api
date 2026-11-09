@@ -7,7 +7,6 @@ API endpoints to their corresponding DynamoDB table names.
 
 import configparser
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +49,9 @@ class ConfigParser:
         try:
             files_read = self.config.read(self.config_path)
             if not files_read:
-                raise IOError(f"No configuration file found at: {self.config_path}")
+                raise OSError(f"No configuration file found at: {self.config_path}")
             logger.info(f"Successfully loaded configuration from {self.config_path}")
-        except IOError as e:
+        except OSError as e:
             logger.error(f"Failed to read configuration file: {str(e)}")
             raise
 

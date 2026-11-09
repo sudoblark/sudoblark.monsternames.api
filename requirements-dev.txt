@@ -6,3 +6,6 @@ pytest==8.4.2
 
 # AWS mocking
 moto[dynamodb]==5.1.22
+
+# Linting and formatting
+ruff==0.16.10
