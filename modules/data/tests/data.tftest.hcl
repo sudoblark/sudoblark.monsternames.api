@@ -298,4 +298,17 @@ run "openapi_spec" {
     ), "arn:aws:")
     error_message = "The public spec at /openapi must not publish any ARNs."
   }
+
+  assert {
+    condition = yamldecode(templatefile(
+      output.api_gateways_map["backend"].openapi_spec_path,
+      output.api_gateways_map["backend"].template_variables
+      ))["x-amazon-apigateway-gateway-responses"]["MISSING_AUTHENTICATION_TOKEN"] == {
+      statusCode = "404"
+      responseTemplates = {
+        "application/json" = "{\"error\": \"Endpoint does not exist\"}"
+      }
+    }
+    error_message = "Unknown routes must get the Lambda's 404, not API Gateway's 403."
+  }
 }

@@ -117,6 +117,14 @@ paths:
           $ref: "#/components/responses/500InternalError"
 %{ endfor ~}
 
+# API Gateway answers routes and methods it doesn't serve with a 403 Missing
+# Authentication Token. Return the Lambda's own 404 instead.
+x-amazon-apigateway-gateway-responses:
+  MISSING_AUTHENTICATION_TOKEN:
+    statusCode: "404"
+    responseTemplates:
+      application/json: '{"error": "Endpoint does not exist"}'
+
 components:
   headers:
     Content-Type:
