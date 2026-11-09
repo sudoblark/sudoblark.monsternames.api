@@ -41,17 +41,11 @@ This creates `lambda-packages/backend.zip` containing:
 
 ## Local Testing
 
+Tests live in `tests/` at the repo root and mock DynamoDB with moto. From the repo root:
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export CONFIG_FILE=config.ini
-export LOG_LEVEL=DEBUG
-export DYNAMODB_ENDPOINT=http://localhost:8000
-
-# Run tests (if implemented)
-pytest tests/
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Code Quality

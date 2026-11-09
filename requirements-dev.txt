@@ -1,0 +1,8 @@
+# Development and testing dependencies
+-r lambda-packages/backend/requirements.txt
+
+# Testing framework
+pytest==8.4.2
+
+# AWS mocking
+moto[dynamodb]==5.1.22
