@@ -19,9 +19,6 @@ locals {
     for bucket in local.buckets : merge(
       {
         # Defaults
-        account             = local.account
-        project             = local.project
-        application         = local.application
         folder_paths        = []
         days_retention      = null
         multipart_retention = 7
@@ -54,11 +51,7 @@ locals {
     for role in local.iam_roles : merge(
       {
         # Defaults
-        account     = local.account
-        project     = local.project
-        application = local.application
-        path        = "/"
-        conditions  = []
+        path = "/"
       },
       role,
       {
@@ -106,9 +99,6 @@ locals {
     for lambda in local.lambdas : merge(
       {
         # Defaults
-        account                        = local.account
-        project                        = local.project
-        application                    = local.application
         timeout                        = 900
         memory                         = 512
         environment_variables          = {}
@@ -121,7 +111,6 @@ locals {
       lambda,
       {
         # Computed values
-        full_name     = "${local.resource_prefix}-${lambda.name}"
         arn           = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.resource_prefix}-${lambda.name}"
         role_arn      = local.iam_roles_map[lambda.role_name].arn
         function_name = "${local.resource_prefix}-${lambda.name}"
@@ -157,9 +146,6 @@ locals {
     for api in local.api_gateways : merge(
       {
         # Defaults
-        account              = local.account
-        project              = local.project
-        application          = local.application
         allowed_lambda_names = []
         quota_limit          = 10
         quota_offset         = 0
@@ -174,22 +160,11 @@ locals {
         # Computed values
         full_name = "${local.resource_prefix}-${api.name}"
 
-        # Resolve Lambda ARNs from names
-        allowed_lambda_arns = [
-          for lambda_name in api.allowed_lambda_names :
-          local.lambdas_map[lambda_name].arn
-        ]
+        # Resolve Lambda function names from short names
         allowed_lambda_function_names = [
           for lambda_name in api.allowed_lambda_names :
           local.lambdas_map[lambda_name].function_name
         ]
-
-        # Compute custom domain configuration
-        custom_domain_computed = api.custom_domain != null ? {
-          domain_name           = "${api.custom_domain.subdomain_name}.${local.base_domain}"
-          certificate_arn       = var.dns_certificate_arn_regional
-          create_route53_record = try(api.custom_domain.create_route53_record, false)
-        } : null
 
         # Resolve template variables
         template_variables = {
@@ -234,17 +209,13 @@ locals {
     for file in local.s3_files : merge(
       {
         # Defaults
-        account            = local.account
-        project            = local.project
-        application        = local.application
         content_type       = null
         template_variables = {}
       },
       file,
       {
         # Computed values - resolve bucket references
-        bucket_id  = local.buckets_map[file.bucket_name].full_name
-        bucket_arn = local.buckets_map[file.bucket_name].arn
+        bucket_id = local.buckets_map[file.bucket_name].full_name
       }
     )
   ]

@@ -1,13 +1,8 @@
 variable "lambdas" {
   description = "List of Lambda function configurations. See data module for structure."
   type = list(object({
-    account                        = string
-    project                        = string
-    application                    = string
     name                           = string
-    full_name                      = string
     function_name                  = string
-    arn                            = string
     description                    = string
     handler                        = string
     runtime                        = string

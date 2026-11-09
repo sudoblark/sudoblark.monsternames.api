@@ -14,7 +14,6 @@
 
   Optional fields:
   - path (string): IAM path for the role (default: "/")
-  - conditions (list(object)): Conditions for assume role policy (default: [])
 
   Constraints:
   - Full role name must be less than 64 characters

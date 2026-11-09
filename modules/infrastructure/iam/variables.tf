@@ -1,13 +1,9 @@
 variable "iam_roles" {
   description = "List of IAM role configurations. See data module for structure."
   type = list(object({
-    account     = string
-    project     = string
-    application = string
-    name        = string
-    full_name   = string
-    arn         = string
-    path        = string
+    name      = string
+    full_name = string
+    path      = string
     assume_policy_principals = list(object({
       type        = string
       identifiers = list(string)

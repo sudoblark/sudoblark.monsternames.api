@@ -110,18 +110,6 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api[each.value.api_name].execution_arn}/*/*/*"
 }
 
-# CloudWatch Logs for API Gateway
-resource "aws_cloudwatch_log_group" "api_gateway_access_logs" {
-  for_each = local.api_gateways_map
-
-  name              = "/aws/apigateway/${each.value.full_name}"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${each.value.full_name}-access-logs"
-  }
-}
-
 resource "aws_api_gateway_account" "account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
 }
