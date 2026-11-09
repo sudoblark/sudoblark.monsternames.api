@@ -37,8 +37,7 @@
     memory      = 256
     lambda_layers = ["powertools-python"]  # Resolved to full ARN
     environment_variables = {
-      LOG_LEVEL   = "INFO"
-      CONFIG_FILE = "config.ini"
+      LOG_LEVEL = "INFO"
     }
   }
 */
@@ -47,7 +46,7 @@ locals {
   lambdas = [
     {
       name          = "backend"
-      description   = "Ingests and retrieves monsternames from DynamoDB"
+      description   = "Retrieves monster names from DynamoDB"
       handler       = "backend_lambda.main.handler"
       runtime       = "python3.11"
       role_name     = "backend-lambda"
@@ -59,8 +58,15 @@ locals {
         "powertools-python"
       ]
       environment_variables = {
-        LOG_LEVEL   = "INFO"
-        CONFIG_FILE = "config.ini"
+        LOG_LEVEL = "INFO"
+
+        # Each monster in monsters.tf and its name tables, as JSON
+        MONSTER_TABLES = jsonencode({
+          for monster in local.monsters : monster.name => {
+            first_name = local.dynamodb_tables_map["${monster.name}-first-name"].full_name
+            last_name  = try(local.dynamodb_tables_map["${monster.name}-last-name"].full_name, null)
+          }
+        })
       }
     }
   ]

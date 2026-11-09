@@ -56,12 +56,6 @@ if [ -d "${LAMBDA_DIR}/backend_lambda" ]; then
   cp -r "${LAMBDA_DIR}/backend_lambda" "${BUILD_DIR}/"
 fi
 
-# Copy configuration files
-if [ -f "${LAMBDA_DIR}/config.ini" ]; then
-  cp "${LAMBDA_DIR}/config.ini" "${BUILD_DIR}/"
-  echo "✓ Copied config.ini"
-fi
-
 # Create ZIP package
 echo "Creating deployment package..."
 cd "${BUILD_DIR}"

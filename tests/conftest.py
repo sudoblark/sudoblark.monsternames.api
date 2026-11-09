@@ -1,7 +1,6 @@
 """Shared pytest fixtures for the backend Lambda tests."""
 
 import json
-import os
 from collections.abc import Callable, Iterable, Iterator
 from typing import Any
 from unittest.mock import MagicMock
@@ -10,21 +9,41 @@ import boto3
 import pytest
 from moto import mock_aws
 
-CONFIG_FILE = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../lambda-packages/backend/config.ini")
-)
+TABLE_PREFIX = "aws-sudoblark-production-monsternames-api"
+
+# Mirrors the MONSTER_TABLES value Terraform builds from modules/data/monsters.tf
+MONSTER_TABLES: dict[str, dict[str, str | None]] = {
+    monster: {
+        "first_name": f"{TABLE_PREFIX}-{monster}-first-name",
+        "last_name": f"{TABLE_PREFIX}-{monster}-last-name" if has_last_names else None,
+    }
+    for monster, has_last_names in {
+        "goatmen": False,
+        "goblin": True,
+        "ogre": False,
+        "orc": True,
+        "skeleton": True,
+        "troll": True,
+    }.items()
+}
 
 
 @pytest.fixture(autouse=True)
 def aws_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Point boto3 at fake credentials and the Lambda at its packaged config."""
+    """Point boto3 at fake credentials and the Lambda at the monster tables."""
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
-    monkeypatch.setenv("CONFIG_FILE", CONFIG_FILE)
+    monkeypatch.setenv("MONSTER_TABLES", json.dumps(MONSTER_TABLES))
     monkeypatch.delenv("DYNAMODB_ENDPOINT", raising=False)
+
+
+@pytest.fixture
+def monster_tables() -> dict[str, dict[str, str | None]]:
+    """Each monster's table names, as the Lambda receives them."""
+    return MONSTER_TABLES
 
 
 @pytest.fixture

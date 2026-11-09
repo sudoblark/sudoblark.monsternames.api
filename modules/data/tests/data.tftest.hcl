@@ -152,6 +152,21 @@ run "lambdas" {
     condition     = output.lambdas_map["backend"].environment_variables["LOG_LEVEL"] == "INFO"
     error_message = "Production must log at INFO, so request data stays out of CloudWatch."
   }
+
+  assert {
+    condition = jsondecode(output.lambdas_map["backend"].environment_variables["MONSTER_TABLES"]) == {
+      for monster in ["goatmen", "goblin", "ogre", "orc", "skeleton", "troll"] : monster => {
+        first_name = output.dynamodb_tables_map["${monster}-first-name"].full_name
+        last_name  = try(output.dynamodb_tables_map["${monster}-last-name"].full_name, null)
+      }
+    }
+    error_message = "MONSTER_TABLES must map every monster to its tables' full names."
+  }
+
+  assert {
+    condition     = jsondecode(output.lambdas_map["backend"].environment_variables["MONSTER_TABLES"])["goatmen"].last_name == null
+    error_message = "A monster without last names must have a null last_name table."
+  }
 }
 
 run "api_gateways" {

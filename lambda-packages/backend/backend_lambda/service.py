@@ -25,7 +25,7 @@ class MonsternameService:
 
     Attributes:
         first_name_table: DynamoDB table name for first names
-        last_name_table: DynamoDB table name for last names
+        last_name_table: DynamoDB table name for last names, or None
         dynamo_db_client: Boto3 DynamoDB resource client
 
     Example:
@@ -38,22 +38,23 @@ class MonsternameService:
         {'first_name': 'Reginald', 'last_name': 'Montgomery', 'full_name': 'Reginald Montgomery'}
     """
 
-    def __init__(self, first_name_table: str, last_name_table: str):
+    def __init__(self, first_name_table: str, last_name_table: str | None = None):
         """
         Initialize MonsternameService.
 
         Args:
             first_name_table: DynamoDB table name for first names
-            last_name_table: DynamoDB table name for last names
+            last_name_table: DynamoDB table name for last names, or None for
+                monsters with first names only
 
         Raises:
-            ValueError: If table names are empty
+            ValueError: If first_name_table is empty
         """
-        if not first_name_table or not last_name_table:
-            raise ValueError("first_name_table and last_name_table must not be empty")
+        if not first_name_table:
+            raise ValueError("first_name_table must not be empty")
 
         self.first_name_table: str = first_name_table
-        self.last_name_table: str = last_name_table
+        self.last_name_table: str | None = last_name_table
 
         # Initialize DynamoDB client (supports local endpoint for testing)
         dynamodb_endpoint: str | None = os.environ.get("DYNAMODB_ENDPOINT")
@@ -86,13 +87,13 @@ class MonsternameService:
         full_name_parts: list[str] = []
 
         # Process both first and last name tables
-        tables_config: list[dict[str, str]] = [
+        tables_config: list[dict[str, str | None]] = [
             {"field": "first_name", "table": self.first_name_table},
             {"field": "last_name", "table": self.last_name_table},
         ]
 
         for config in tables_config:
-            if config["table"] == "none":
+            if config["table"] is None:
                 logger.debug(f"Skipping {config['field']} - table not configured")
                 continue
 

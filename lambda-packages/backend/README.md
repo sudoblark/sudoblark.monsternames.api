@@ -6,10 +6,8 @@ This Lambda function serves as the backend for the read-only MonsterNames REST A
 
 The Lambda is structured following best practices:
 
-- **main.py** - Lambda handler entry point
-- **config.py** - Configuration management (INI file parsing)
+- **main.py** - Lambda handler entry point, mapping each route to its monster's tables
 - **service.py** - Business logic for name operations
-- **config.ini** - Endpoint to DynamoDB table mappings
 
 ## Features
 
@@ -23,7 +21,7 @@ The Lambda is structured following best practices:
 
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
-| `CONFIG_FILE` | Yes | Path to config.ini file | N/A |
+| `MONSTER_TABLES` | Yes | JSON map of each monster to its name tables, generated from `modules/data/monsters.tf` | N/A |
 | `LOG_LEVEL` | No | Logging level (DEBUG, INFO, WARNING, ERROR) | INFO |
 | `DYNAMODB_ENDPOINT` | No | Custom DynamoDB endpoint (for local testing) | None |
 
@@ -36,7 +34,6 @@ The Lambda is structured following best practices:
 This creates `lambda-packages/backend.zip` containing:
 - Python code
 - Dependencies from requirements.txt
-- Configuration file
 
 ## Local Testing
 
@@ -55,7 +52,7 @@ Follows [sudoblark.documentation Python standards](https://github.com/sudoblark/
 - ✅ Google-style docstrings
 - ✅ Comprehensive error handling
 - ✅ Structured logging
-- ✅ Clear separation of concerns (handler → config → service)
+- ✅ Clear separation of concerns (handler → service)
 
 ## API Usage
 
@@ -67,16 +64,19 @@ curl https://monsternames.sudoblark.com/skeleton
 
 ## Configuration Format
 
-Each section maps a route to the Terraform-managed tables in `modules/data/dynamodb_tables.tf`:
+Terraform builds `MONSTER_TABLES` from `modules/data/monsters.tf`, so adding a monster there is all the Lambda needs. Each monster is served at `/<name>`, and `last_name` is `null` for monsters with first names only:
 
-```ini
-[/skeleton]
-first_name_table = aws-sudoblark-production-monsternames-api-skeleton-first-name
-last_name_table = aws-sudoblark-production-monsternames-api-skeleton-last-name
-
-[/orc]
-first_name_table = aws-sudoblark-production-monsternames-api-orc-first-name
-last_name_table = aws-sudoblark-production-monsternames-api-orc-last-name
+```json
+{
+  "goatmen": {
+    "first_name": "aws-sudoblark-production-monsternames-api-goatmen-first-name",
+    "last_name": null
+  },
+  "skeleton": {
+    "first_name": "aws-sudoblark-production-monsternames-api-skeleton-first-name",
+    "last_name": "aws-sudoblark-production-monsternames-api-skeleton-last-name"
+  }
+}
 ```
 
 ## Dependencies

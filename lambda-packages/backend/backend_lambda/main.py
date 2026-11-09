@@ -6,7 +6,8 @@ backend for the MonsterNames REST API. It handles API Gateway events and reads
 monster names from DynamoDB tables. The API is read-only: only GET is served.
 
 Environment Variables:
-    CONFIG_FILE (str): Path to configuration file for DynamoDB table mapping
+    MONSTER_TABLES (str): JSON map of each monster to its first_name and
+        last_name table names, generated from modules/data/monsters.tf
     LOG_LEVEL (str): Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     DYNAMODB_ENDPOINT (str, optional): Custom DynamoDB endpoint for local testing
 """
@@ -22,7 +23,6 @@ from aws_lambda_powertools.utilities.data_classes import (
 )
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from backend_lambda.config import ConfigParser
 from backend_lambda.service import MonsternameService
 
 # Configure logging
@@ -31,13 +31,34 @@ logger = logging.getLogger()
 logger.setLevel(LOG_LEVEL)
 
 
+def load_monster_tables() -> dict[str, dict[str, str | None]]:
+    """
+    Load each monster's table names from the MONSTER_TABLES environment variable.
+
+    Returns:
+        Map of monster name to its "first_name" and "last_name" table names,
+        where "last_name" is None for monsters with first names only
+
+    Raises:
+        ValueError: If MONSTER_TABLES is not set or is not valid JSON
+    """
+    raw: str = os.environ.get("MONSTER_TABLES", "")
+    if not raw:
+        raise ValueError("MONSTER_TABLES environment variable is required")
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"MONSTER_TABLES is not valid JSON: {e}") from e
+
+
 @event_source(data_class=APIGatewayProxyEvent)
 def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, Any]:
     """
     Lambda handler for MonsterNames API requests.
 
-    Processes API Gateway events, routes requests to appropriate service methods,
-    and returns properly formatted HTTP responses.
+    Maps the request path to a monster, reads a random name from that monster's
+    tables and returns a properly formatted HTTP response.
 
     Args:
         event: API Gateway proxy event containing request data
@@ -47,16 +68,11 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
         Dictionary containing HTTP status code and JSON response body
 
     Raises:
-        ValueError: If CONFIG_FILE environment variable is not set
+        ValueError: If MONSTER_TABLES is missing or invalid
         Exception: For unexpected errors during request processing
     """
     try:
-        # Load configuration
-        config_path: str = os.environ.get("CONFIG_FILE", "")
-        if not config_path:
-            raise ValueError("CONFIG_FILE environment variable is required")
-
-        logger.info(f"Using configuration file: {config_path}")
+        monster_tables = load_monster_tables()
 
         # Parse request
         endpoint: str = event.path
@@ -64,22 +80,14 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
 
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
 
-        # Load configuration and check endpoint exists
-        config_parser: ConfigParser = ConfigParser(config_path)
-
-        if not config_parser.endpoint_exists(endpoint):
+        # Each monster is served at /<name>
+        tables = monster_tables.get(endpoint.strip("/"))
+        if tables is None:
             logger.warning(f"Endpoint not found: {endpoint}")
             return {"statusCode": 404, "body": json.dumps({"error": "Endpoint does not exist"})}
 
-        # Get table configuration for endpoint
-        first_name_table: str = config_parser.get_first_name_table(endpoint)
-        last_name_table: str = config_parser.get_last_name_table(endpoint)
-
-        logger.debug(f"Tables - first_name: {first_name_table}, last_name: {last_name_table}")
-
-        # Initialize service
-        service: MonsternameService = MonsternameService(
-            first_name_table=first_name_table, last_name_table=last_name_table
+        logger.debug(
+            f"Tables - first_name: {tables['first_name']}, last_name: {tables['last_name']}"
         )
 
         # The API is read-only, so GET is the only method served
@@ -88,6 +96,9 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
             error = f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
             return {"statusCode": 405, "body": json.dumps({"error": error})}
 
+        service: MonsternameService = MonsternameService(
+            first_name_table=tables["first_name"], last_name_table=tables["last_name"]
+        )
         status_code, response_body = service.get_random_name()
 
         logger.info(f"Request completed with status {status_code}")

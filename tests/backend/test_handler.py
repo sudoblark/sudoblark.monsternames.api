@@ -12,11 +12,6 @@ MONSTERS_WITH_LAST_NAMES = ["goblin", "orc", "skeleton", "troll"]
 MONSTERS_WITH_FIRST_NAMES_ONLY = ["goatmen", "ogre"]
 
 
-def table_name(monster: str, field: str) -> str:
-    """Name of a monster's name table, as Terraform creates it."""
-    return f"aws-sudoblark-production-monsternames-api-{monster}-{field}"
-
-
 def invoke(event: dict[str, Any], context: Any) -> tuple:
     """Call the handler and decode its response body."""
     response = handler(event, context)
@@ -25,10 +20,14 @@ def invoke(event: dict[str, Any], context: Any) -> tuple:
 
 @pytest.mark.parametrize("monster", MONSTERS_WITH_LAST_NAMES)
 def test_get_returns_first_last_and_full_name(
-    monster: str, seed_table: Callable, api_event: Callable, lambda_context: Any
+    monster: str,
+    monster_tables: dict,
+    seed_table: Callable,
+    api_event: Callable,
+    lambda_context: Any,
 ) -> None:
-    seed_table(table_name(monster, "first-name"), ["Reginald"])
-    seed_table(table_name(monster, "last-name"), ["Montgomery"])
+    seed_table(monster_tables[monster]["first_name"], ["Reginald"])
+    seed_table(monster_tables[monster]["last_name"], ["Montgomery"])
 
     status, body = invoke(api_event(f"/{monster}"), lambda_context)
 
@@ -42,9 +41,13 @@ def test_get_returns_first_last_and_full_name(
 
 @pytest.mark.parametrize("monster", MONSTERS_WITH_FIRST_NAMES_ONLY)
 def test_get_returns_first_name_only_for_monsters_without_last_names(
-    monster: str, seed_table: Callable, api_event: Callable, lambda_context: Any
+    monster: str,
+    monster_tables: dict,
+    seed_table: Callable,
+    api_event: Callable,
+    lambda_context: Any,
 ) -> None:
-    seed_table(table_name(monster, "first-name"), ["Fluffy"])
+    seed_table(monster_tables[monster]["first_name"], ["Fluffy"])
 
     status, body = invoke(api_event(f"/{monster}"), lambda_context)
 
@@ -53,10 +56,10 @@ def test_get_returns_first_name_only_for_monsters_without_last_names(
 
 
 def test_get_picks_a_name_from_the_table(
-    seed_table: Callable, api_event: Callable, lambda_context: Any
+    monster_tables: dict, seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
     names = {"Bomp", "Gog", "Wob"}
-    seed_table(table_name("ogre", "first-name"), names)
+    seed_table(monster_tables["ogre"]["first_name"], names)
 
     status, body = invoke(api_event("/ogre"), lambda_context)
 
@@ -83,11 +86,26 @@ def test_unknown_monster_returns_404(
     assert body == {"error": "Endpoint does not exist"}
 
 
+def test_missing_monster_tables_returns_500(
+    monkeypatch: pytest.MonkeyPatch, dynamodb: Any, api_event: Callable, lambda_context: Any
+) -> None:
+    monkeypatch.delenv("MONSTER_TABLES")
+
+    status, body = invoke(api_event("/skeleton"), lambda_context)
+
+    assert status == 500
+    assert body == {"error": "Configuration error"}
+
+
 @pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 def test_write_methods_return_405(
-    method: str, seed_table: Callable, api_event: Callable, lambda_context: Any
+    method: str,
+    monster_tables: dict,
+    seed_table: Callable,
+    api_event: Callable,
+    lambda_context: Any,
 ) -> None:
-    seed_table(table_name("skeleton", "first-name"), ["Reginald"])
+    seed_table(monster_tables["skeleton"]["first_name"], ["Reginald"])
 
     status, body = invoke(
         api_event("/skeleton", method, {"first_name": "Mortimer"}), lambda_context
@@ -98,9 +116,9 @@ def test_write_methods_return_405(
 
 
 def test_get_ignores_the_request_body(
-    seed_table: Callable, api_event: Callable, lambda_context: Any
+    monster_tables: dict, seed_table: Callable, api_event: Callable, lambda_context: Any
 ) -> None:
-    seed_table(table_name("goatmen", "first-name"), ["Fluffy"])
+    seed_table(monster_tables["goatmen"]["first_name"], ["Fluffy"])
 
     status, body = invoke(api_event("/goatmen", "GET", "{not json"), lambda_context)
 
