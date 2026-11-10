@@ -31,17 +31,15 @@ The Lambda is structured following best practices:
 ./scripts/build-lambda.sh backend
 ```
 
-This creates `lambda-packages/backend.zip` containing:
-- Python code
-- Dependencies from requirements.txt
+This creates `lambda-packages/backend.zip`, which holds only the handler code. Its dependencies come from AWS, as [Dependencies](#dependencies) describes.
 
 ## Local Testing
 
-Tests live in `tests/` at the repo root and mock DynamoDB with moto. From the repo root:
+Tests live in `tests/` at the repo root and mock DynamoDB with moto. From the repo root, [uv](https://docs.astral.sh/uv/) installs Python 3.13 and the dependencies `uv.lock` records, then runs them:
 
 ```bash
-pip install -r requirements-dev.txt
-pytest
+uv sync
+uv run pytest
 ```
 
 ## Code Quality
@@ -81,5 +79,7 @@ Terraform builds `MONSTER_TABLES` from `modules/data/monsters.tf`, so adding a m
 
 ## Dependencies
 
-- **boto3** - AWS SDK for DynamoDB operations
-- **aws-lambda-powertools** - Structured event parsing and utilities
+- **boto3** - AWS SDK for DynamoDB operations, from the Lambda's Python runtime
+- **aws-lambda-powertools** - Structured event parsing and utilities, from AWS's Powertools layer in `modules/data/lambdas.tf`
+
+`pyproject.toml` pins the Powertools release that layer ships, so the tests run against the same code.
