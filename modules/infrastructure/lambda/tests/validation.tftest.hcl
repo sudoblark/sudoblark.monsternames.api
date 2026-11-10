@@ -10,7 +10,7 @@ variables {
       function_name                  = "aws-sudoblark-production-monsternames-api-backend"
       description                    = "Retrieves monster names from DynamoDB"
       handler                        = "backend_lambda.main.handler"
-      runtime                        = "python3.11"
+      runtime                        = "python3.13"
       role_arn                       = "arn:aws:iam::123456789012:role/example"
       zip_file_path                  = "tests/validation.tftest.hcl"
       timeout                        = 29

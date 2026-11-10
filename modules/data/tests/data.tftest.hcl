@@ -138,8 +138,13 @@ run "lambdas" {
   }
 
   assert {
-    condition     = output.lambdas_map["backend"].lambda_layers == ["arn:aws:lambda:eu-west-2:017000801446:layer:AWSLambdaPowertoolsPythonV2:73"]
-    error_message = "powertools-python must resolve to the Powertools layer ARN in this region."
+    condition     = output.lambdas_map["backend"].lambda_layers == ["arn:aws:lambda:eu-west-2:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-x86_64:42"]
+    error_message = "The Powertools layer ARN must resolve to this region."
+  }
+
+  assert {
+    condition     = strcontains(output.lambdas_map["backend"].lambda_layers[0], "-${replace(output.lambdas_map["backend"].runtime, ".", "")}-")
+    error_message = "The Powertools layer must be built for the Lambda's Python runtime."
   }
 
   assert {

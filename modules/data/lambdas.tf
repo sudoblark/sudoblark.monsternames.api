@@ -5,7 +5,7 @@
   - name (string): Short name for the Lambda (auto-prefixed with aws-sudoblark-production-monsternames-api)
   - description (string): Human-friendly description
   - handler (string): Lambda handler (e.g., "module.handler")
-  - runtime (string): Runtime version (e.g., "python3.11")
+  - runtime (string): Runtime version (e.g., "python3.13")
   - role_name (string): Name of IAM role (references iam_roles by name)
   - zip_file_path (string): Path to deployment package relative to repo root
 
@@ -30,12 +30,12 @@
     name        = "backend"
     description = "Handles API requests for monster names"
     handler     = "backend_lambda.main.handler"
-    runtime     = "python3.11"
+    runtime     = "python3.13"
     role_name   = "backend-lambda"
     zip_file_path = "./lambda-packages/backend.zip"
     timeout     = 60
     memory      = 256
-    lambda_layers = ["arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73"]
+    lambda_layers = ["arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-x86_64:42"]
     environment_variables = {
       LOG_LEVEL = "INFO"
     }
@@ -48,14 +48,17 @@ locals {
       name          = "backend"
       description   = "Retrieves monster names from DynamoDB"
       handler       = "backend_lambda.main.handler"
-      runtime       = "python3.11"
+      runtime       = "python3.13"
       role_name     = "backend-lambda"
       zip_file_path = "../../lambda-packages/backend.zip"
       timeout       = 29
       memory        = 256
       lambda_layers = [
-        # AWS Lambda Powertools for Python, which AWS publishes in every region
-        "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73"
+        # Powertools for AWS Lambda (Python) v3, which AWS publishes in every
+        # region. The layer is built per Python version and architecture, so
+        # it changes with the runtime. requirements-dev.txt pins the same
+        # release for the tests.
+        "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-x86_64:42"
       ]
       environment_variables = {
         LOG_LEVEL = "INFO"

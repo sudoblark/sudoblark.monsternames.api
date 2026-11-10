@@ -41,16 +41,9 @@ fi
 BUILD_DIR=$(mktemp -d)
 echo "Using temporary build directory: ${BUILD_DIR}"
 
-# Install dependencies
-if [ -f "${LAMBDA_DIR}/requirements.txt" ]; then
-  echo "Installing dependencies..."
-  pip install -r "${LAMBDA_DIR}/requirements.txt" -t "${BUILD_DIR}" --quiet
-  echo "✓ Dependencies installed"
-else
-  echo "⚠ No requirements.txt found, skipping dependency installation"
-fi
-
-# Copy Lambda code
+# Copy Lambda code. Its dependencies come from AWS, not the package: boto3
+# from the Python runtime and Powertools from the layer in
+# modules/data/lambdas.tf.
 echo "Copying Lambda code..."
 if [ -d "${LAMBDA_DIR}/backend_lambda" ]; then
   cp -r "${LAMBDA_DIR}/backend_lambda" "${BUILD_DIR}/"
