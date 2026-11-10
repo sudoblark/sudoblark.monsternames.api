@@ -56,7 +56,7 @@ locals {
       lambda_layers = [
         # Powertools for AWS Lambda (Python) v3, which AWS publishes in every
         # region. The layer is built per Python version and architecture, so
-        # it changes with the runtime. requirements-dev.txt pins the same
+        # it changes with the runtime. pyproject.toml pins the same
         # release for the tests.
         "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-x86_64:42"
       ]

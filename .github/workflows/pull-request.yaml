@@ -107,19 +107,19 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
+      # uv installs the Python version pyproject.toml requires, then the
+      # dependencies exactly as uv.lock records them
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: uv sync --locked
 
       - name: Ruff check
-        run: ruff check .
+        run: uv run ruff check .
 
       - name: Ruff format check
-        run: ruff format --check .
+        run: uv run ruff format --check .
 
   python_test:
     name: Python Test
@@ -130,16 +130,16 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
+      # uv installs the Python version pyproject.toml requires, then the
+      # dependencies exactly as uv.lock records them
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.3.3
 
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: uv sync --locked
 
       - name: Run pytest
-        run: pytest
+        run: uv run pytest
 
   plan:
     name: Terraform Plan
