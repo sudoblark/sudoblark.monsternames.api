@@ -92,13 +92,16 @@ jobs:
         with:
           terraform_version: ${{ steps.terraform-version.outputs.version }}
 
-      - name: Terraform Init - Data Module
-        run: terraform init
-        working-directory: ./modules/data
-
-      - name: Terraform Test - Data Module
-        run: terraform test
-        working-directory: ./modules/data
+      # Every module with a tests/ folder, so a new module's tests run
+      # without editing this workflow
+      - name: Terraform Test - All Modules
+        run: |
+          for module in $(find modules -path '*/tests/*.tftest.hcl' -exec dirname {} \; | xargs -n1 dirname | sort -u); do
+            echo "::group::${module}"
+            terraform -chdir="${module}" init -input=false
+            terraform -chdir="${module}" test
+            echo "::endgroup::"
+          done
 
   python_lint:
     name: Python Lint
