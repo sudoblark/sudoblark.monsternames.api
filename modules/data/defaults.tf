@@ -12,7 +12,7 @@ locals {
   application = "api"
 
   # AWS context
-  region     = data.aws_region.current_region.name
+  region     = data.aws_region.current_region.region
   account_id = data.aws_caller_identity.current_account.account_id
 
   # Common resource prefix
