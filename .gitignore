@@ -54,7 +54,10 @@ coverage.xml
 *.tfvars
 *.tfvars.json
 *.tfplan
+# Commit each environment root's provider lock, so every plan and apply uses
+# the same provider build, but not the ones terraform test leaves in modules/
 .terraform.lock.hcl
+!infrastructure/*/.terraform.lock.hcl
 crash.log
 crash.*.log
 override.tf
