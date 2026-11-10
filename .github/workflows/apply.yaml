@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create Lambda deployment packages
         run: |
@@ -27,7 +27,7 @@ jobs:
           aws-region: eu-west-2
 
       - name: terraform apply
-        uses: dflook/terraform-apply@v1
+        uses: dflook/terraform-apply@v2
         with:
           auto_approve: true
           path: ./infrastructure/aws-sudoblark-production
