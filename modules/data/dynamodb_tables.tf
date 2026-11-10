@@ -13,6 +13,8 @@
 
   Constraints:
   - Full table name must be 3-255 characters of a-z, A-Z, 0-9, _, - and .
+  - Seed values must be unique within a table
+  - The dynamodb module enforces the two above with validation blocks
   - Names must not clash with a derived <monster>-first-name or <monster>-last-name table
   - Tables are PAY_PER_REQUEST, with point-in-time recovery and AWS-managed encryption
   - Terraform owns every seeded item, so editing the JSON file edits the table

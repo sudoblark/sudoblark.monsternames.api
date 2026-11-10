@@ -18,9 +18,12 @@
   - reserved_concurrent_executions (number): Concurrency limit (default: -1, unreserved)
 
   Constraints:
-  - Full Lambda name must be less than 64 characters
+  - Full Lambda name must be at most 64 characters
+  - timeout must be 1-900, memory 128-10240 and storage 512-10240
+  - reserved_concurrent_executions must be -1 (unreserved) or more
   - role_name must reference an existing IAM role in iam_roles.tf
   - zip_file_path must exist and contain valid deployment package
+  - The lambda module enforces the limits above with validation blocks
 
   Example:
   {

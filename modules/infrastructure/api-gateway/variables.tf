@@ -18,6 +18,20 @@ variable "api_gateways" {
       certificate_arn = string
     }))
   }))
+
+  validation {
+    condition = alltrue([
+      for api in var.api_gateways : contains(["DAY", "WEEK", "MONTH"], api.quota_period)
+    ])
+    error_message = "quota_period must be DAY, WEEK or MONTH."
+  }
+
+  validation {
+    condition = alltrue([
+      for api in var.api_gateways : api.rate_limit > 0 && api.burst_limit >= 0
+    ])
+    error_message = "rate_limit must be positive, and burst_limit zero or more."
+  }
 }
 
 variable "dns_zone_id" {

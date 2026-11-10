@@ -16,8 +16,11 @@
   - path (string): IAM path for the role (default: "/")
 
   Constraints:
-  - Full role name must be less than 64 characters
+  - Full role name must be at most 64 characters
+  - path must start and end with "/"
   - SID must be alphanumeric (no spaces or special characters)
+  - effect must be Allow or Deny
+  - The iam module enforces these with validation blocks
   - Reference other primitives through their maps (e.g. local.buckets_map["assets"].arn)
     rather than writing their names by hand
 

@@ -13,8 +13,11 @@
   - log_bucket (string): Target bucket for access logs (default: null)
 
   Constraints:
-  - Full bucket name (aws-sudoblark-production-monsternames-api-name) must be globally unique
-  - Bucket names must be lowercase and use hyphens only
+  - Full bucket name (aws-sudoblark-production-monsternames-api-name) must be globally unique,
+    and 3-63 lowercase letters, numbers, dots and hyphens
+  - days_retention, when set, and multipart_retention must be at least 1
+  - folder_paths must end with "/"
+  - The s3 module enforces these with validation blocks
 
   Note:
   - All buckets use S3-managed encryption (AES-256) by default

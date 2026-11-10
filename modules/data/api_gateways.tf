@@ -21,6 +21,8 @@
   - allowed_lambda_names must reference existing Lambdas in lambdas.tf
   - quota_* fields only apply to APIs with api_keys
   - quota_period must be one of: DAY, WEEK, MONTH
+  - rate_limit must be positive, and burst_limit zero or more
+  - The api-gateway module enforces the two above with validation blocks
   - Template variables reference other primitives through their maps
     (e.g. local.lambdas_map["backend"].arn) rather than writing names by hand
 

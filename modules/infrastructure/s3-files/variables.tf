@@ -8,4 +8,11 @@ variable "s3_files" {
     content_type       = optional(string)
     template_variables = map(string)
   }))
+
+  validation {
+    condition = alltrue([
+      for file in var.s3_files : !startswith(file.object_key, "/")
+    ])
+    error_message = "object_key must not start with \"/\"."
+  }
 }

@@ -14,7 +14,7 @@
   Constraints:
   - source_path must exist and be readable
   - bucket_name must reference an existing bucket in buckets.tf
-  - object_key should not start with "/"
+  - object_key must not start with "/", which the s3-files module enforces
 
   Bucket References (resolved in infrastructure.tf):
   - Bucket names → Full bucket IDs and ARNs
