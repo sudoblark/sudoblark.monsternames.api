@@ -13,6 +13,7 @@ variable "api_gateways" {
     burst_limit                   = number
     rate_limit                    = number
     api_keys                      = list(string)
+    stage_name                    = string
     custom_domain = optional(object({
       domain_name     = string
       certificate_arn = string
@@ -25,6 +26,13 @@ variable "api_gateways" {
       resources = list(string)
     }))
   }))
+
+  validation {
+    condition = alltrue([
+      for api in var.api_gateways : can(regex("^[A-Za-z0-9_-]{1,128}$", api.stage_name))
+    ])
+    error_message = "Stage names must be 1-128 letters, numbers, hyphens or underscores."
+  }
 
   validation {
     condition = alltrue([

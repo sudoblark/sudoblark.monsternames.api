@@ -15,6 +15,8 @@
   - quota_limit (number): Requests per quota period for each key (default: 10)
   - quota_offset (number): Request offset for the initial period (default: 0)
   - quota_period (string): DAY, WEEK, or MONTH (default: "DAY")
+  - stage_name (string): Name of the API's deployment stage (default: the
+    account's api_stage_name in defaults.tf)
   - policy_statements (list(object)): What the API's integrations may do, such as
     reading objects from S3 (default: [], no role)
     - sid (string): Statement ID
@@ -33,6 +35,7 @@
   - quota_* fields only apply to APIs with api_keys
   - quota_period must be one of: DAY, WEEK, MONTH
   - rate_limit must be positive, and burst_limit zero or more
+  - stage_name must be 1-128 letters, numbers, hyphens or underscores
   - The full role name must be at most 64 characters
   - SID must be alphanumeric (no spaces or special characters)
   - effect must be Allow or Deny

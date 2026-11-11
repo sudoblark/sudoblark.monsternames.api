@@ -25,6 +25,7 @@ variables {
       burst_limit                   = 5
       rate_limit                    = 100
       api_keys                      = []
+      stage_name                    = "production"
       role_name                     = "aws-sudoblark-production-monsternames-api-backend-integrations"
       policy_statements = [
         {
@@ -40,6 +41,21 @@ variables {
 
 run "accepts_a_valid_api" {
   command = plan
+
+  assert {
+    condition     = aws_api_gateway_stage.stage["backend"].stage_name == "production"
+    error_message = "Each API's stage must take the stage_name its data entry gives."
+  }
+}
+
+run "rejects_a_stage_name_with_spaces" {
+  command = plan
+
+  variables {
+    api_gateways = [merge(var.api_gateways[0], { stage_name = "live api" })]
+  }
+
+  expect_failures = [var.api_gateways]
 }
 
 run "rejects_an_unknown_quota_period" {

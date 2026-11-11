@@ -204,6 +204,11 @@ run "api_gateways" {
   }
 
   assert {
+    condition     = output.api_gateways_map["backend"].stage_name == output.defaults.account_settings.api_stage_name
+    error_message = "An API's stage must default to the account's api_stage_name."
+  }
+
+  assert {
     condition     = output.api_gateways_map["backend"].api_keys == []
     error_message = "The API is read-only, so it has no API keys."
   }

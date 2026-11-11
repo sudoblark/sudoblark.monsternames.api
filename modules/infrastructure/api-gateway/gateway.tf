@@ -40,15 +40,15 @@ resource "aws_api_gateway_deployment" "deployment" {
   }
 }
 
-resource "aws_api_gateway_stage" "production" {
+resource "aws_api_gateway_stage" "stage" {
   for_each = local.api_gateways_map
 
   deployment_id = aws_api_gateway_deployment.deployment[each.key].id
   rest_api_id   = aws_api_gateway_rest_api.api[each.key].id
-  stage_name    = "production"
+  stage_name    = each.value.stage_name
 
   tags = {
-    Name = "${each.value.full_name}-production"
+    Name = "${each.value.full_name}-${each.value.stage_name}"
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_api_gateway_usage_plan" "plan" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.api[each.key].id
-    stage  = aws_api_gateway_stage.production[each.key].stage_name
+    stage  = aws_api_gateway_stage.stage[each.key].stage_name
   }
 
   quota_settings {
@@ -123,7 +123,7 @@ resource "aws_api_gateway_method_settings" "settings" {
   for_each = local.api_gateways_map
 
   rest_api_id = aws_api_gateway_rest_api.api[each.key].id
-  stage_name  = aws_api_gateway_stage.production[each.key].stage_name
+  stage_name  = aws_api_gateway_stage.stage[each.key].stage_name
   method_path = "*/*"
 
   settings {
@@ -169,7 +169,7 @@ resource "aws_api_gateway_base_path_mapping" "custom_domain_mapping" {
   }
 
   api_id      = aws_api_gateway_rest_api.api[each.key].id
-  stage_name  = aws_api_gateway_stage.production[each.key].stage_name
+  stage_name  = aws_api_gateway_stage.stage[each.key].stage_name
   domain_name = aws_api_gateway_domain_name.custom_domain[each.key].domain_name
 }
 

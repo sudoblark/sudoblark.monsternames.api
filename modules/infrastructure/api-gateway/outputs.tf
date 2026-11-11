@@ -17,7 +17,7 @@ output "api_gateways" {
 output "api_gateway_stages" {
   description = "Map of API Gateway stages"
   value = {
-    for name, stage in aws_api_gateway_stage.production : name => {
+    for name, stage in aws_api_gateway_stage.stage : name => {
       id            = stage.id
       arn           = stage.arn
       invoke_url    = stage.invoke_url
@@ -29,7 +29,7 @@ output "api_gateway_stages" {
 output "api_gateway_urls" {
   description = "Map of API Gateway invoke URLs"
   value = {
-    for name, stage in aws_api_gateway_stage.production : name => stage.invoke_url
+    for name, stage in aws_api_gateway_stage.stage : name => stage.invoke_url
   }
 }
 

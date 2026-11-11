@@ -25,6 +25,7 @@ variables {
       burst_limit                   = 5
       rate_limit                    = 100
       api_keys                      = []
+      stage_name                    = "production"
       role_name                     = "aws-sudoblark-production-monsternames-api-backend-integrations"
       policy_statements = [
         {

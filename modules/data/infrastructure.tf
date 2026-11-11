@@ -126,6 +126,7 @@ locals {
         api_keys             = []
         custom_domain        = null
         policy_statements    = []
+        stage_name           = local.account_settings.api_stage_name
       },
       api,
       {
