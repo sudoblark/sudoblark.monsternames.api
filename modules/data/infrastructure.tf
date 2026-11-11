@@ -72,33 +72,6 @@ locals {
 }
 
 # ============================================================================
-# IAM Roles Enrichment
-# ============================================================================
-
-locals {
-  # Enrich IAM role data with computed values
-  iam_roles_enriched = [
-    for role in local.iam_roles : merge(
-      {
-        # Defaults
-        path = "/"
-      },
-      role,
-      {
-        # Computed values
-        full_name = "${local.resource_prefix}-${role.name}"
-        arn       = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${role.name}"
-      }
-    )
-  ]
-
-  # Create lookup map for cross-referencing
-  iam_roles_map = {
-    for role in local.iam_roles_enriched : role.name => role
-  }
-}
-
-# ============================================================================
 # Lambda Functions Enrichment
 # ============================================================================
 
@@ -152,11 +125,19 @@ locals {
         rate_limit           = 10
         api_keys             = []
         custom_domain        = null
+        policy_statements    = []
       },
       api,
       {
         # Computed values
         full_name = "${local.resource_prefix}-${api.name}"
+        role_name = "${local.resource_prefix}-${api.name}-integrations"
+        role_arn  = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${api.name}-integrations"
+
+        # The spec's integrations take the API's role as their credentials
+        template_variables = merge(api.template_variables, {
+          api_gateway_iam_role_arn = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${api.name}-integrations"
+        })
 
         # Resolve Lambda function names from short names
         allowed_lambda_function_names = [

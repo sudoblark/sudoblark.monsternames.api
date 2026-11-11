@@ -4,6 +4,12 @@ locals {
     for api in var.api_gateways : api.name => api
   }
 
+  # APIs whose integrations need a role, such as to read from S3
+  integration_roles_map = {
+    for name, api in local.api_gateways_map : name => api
+    if length(api.policy_statements) > 0
+  }
+
   # Flatten Lambda permissions for all APIs
   lambda_permissions = flatten([
     for api in var.api_gateways : [

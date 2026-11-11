@@ -17,6 +17,10 @@ resource "aws_api_gateway_rest_api" "api" {
   lifecycle {
     create_before_destroy = true
   }
+
+  # The spec names the integrations' role, which must be able to read before
+  # the API uses it
+  depends_on = [aws_iam_role_policy.integrations]
 }
 
 resource "aws_api_gateway_deployment" "deployment" {

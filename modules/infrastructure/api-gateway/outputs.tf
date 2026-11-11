@@ -8,6 +8,8 @@ output "api_gateways" {
       root_resource_id = api.root_resource_id
       execution_arn    = api.execution_arn
       created_date     = api.created_date
+      role_name        = try(aws_iam_role.integrations[name].name, null)
+      role_arn         = try(aws_iam_role.integrations[name].arn, null)
     }
   }
 }

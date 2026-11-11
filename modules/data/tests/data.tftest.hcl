@@ -50,23 +50,6 @@ run "buckets" {
   }
 }
 
-run "iam_roles" {
-  command = plan
-
-  assert {
-    condition     = output.iam_roles_map["api-gateway"].arn == "arn:aws:iam::123456789012:role/aws-sudoblark-production-monsternames-api-api-gateway"
-    error_message = "Role ARNs must be computed from the account ID and full name."
-  }
-
-  assert {
-    condition = (
-      output.iam_roles_map["api-gateway"].policy_statements[0].resources == ["arn:aws:s3:::aws-sudoblark-production-monsternames-api-assets"] &&
-      output.iam_roles_map["api-gateway"].policy_statements[1].resources == ["arn:aws:s3:::aws-sudoblark-production-monsternames-api-assets/*"]
-    )
-    error_message = "Bucket short names in policy resources must resolve to bucket ARNs."
-  }
-}
-
 run "dynamodb_tables" {
   command = plan
 
@@ -191,9 +174,36 @@ run "api_gateways" {
       aws_region_name          = "eu-west-2"
       asset_bucket_name        = output.buckets_map["assets"].full_name
       swagger_index_path       = "swagger_ui/index.html"
-      api_gateway_iam_role_arn = output.iam_roles_map["api-gateway"].arn
+      api_gateway_iam_role_arn = output.api_gateways_map["backend"].role_arn
     }
     error_message = "OpenAPI template variables must resolve to real ARNs, names and the region."
+  }
+
+  assert {
+    condition     = output.api_gateways_map["backend"].role_arn == "arn:aws:iam::123456789012:role/aws-sudoblark-production-monsternames-api-backend-integrations"
+    error_message = "An API's role ARN must be computed from the account ID and the API's role name."
+  }
+
+  assert {
+    condition     = output.api_gateways_map["backend"].role_name != output.lambdas_map["backend"].role_name
+    error_message = "An API's role must not take the name of a Lambda's role."
+  }
+
+  assert {
+    condition = (
+      output.api_gateways_map["backend"].policy_statements[0].resources == ["arn:aws:s3:::aws-sudoblark-production-monsternames-api-assets"] &&
+      output.api_gateways_map["backend"].policy_statements[1].resources == ["arn:aws:s3:::aws-sudoblark-production-monsternames-api-assets/*"]
+    )
+    error_message = "Bucket short names in policy resources must resolve to bucket ARNs."
+  }
+
+  assert {
+    condition = alltrue(flatten([
+      for statement in output.api_gateways_map["backend"].policy_statements : [
+        for action in statement.actions : startswith(action, "s3:Get") || startswith(action, "s3:List")
+      ]
+    ]))
+    error_message = "The API's integrations may only read the assets bucket."
   }
 
   assert {
@@ -242,6 +252,16 @@ run "openapi_spec" {
       )
     ])
     error_message = "Every monster path in the API's spec must invoke the backend Lambda."
+  }
+
+  assert {
+    condition = alltrue([
+      for path in ["/", "/openapi"] : yamldecode(templatefile(
+        output.api_gateways_map["backend"].openapi_spec_path,
+        output.api_gateways_map["backend"].template_variables
+      )).paths[path].get["x-amazon-apigateway-integration"].credentials == output.api_gateways_map["backend"].role_arn
+    ])
+    error_message = "The spec's S3 integrations must assume the API's own role."
   }
 
   assert {

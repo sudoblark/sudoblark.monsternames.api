@@ -46,9 +46,9 @@ locals {
       content_type = "application/x-yaml"
 
       # The API's spec without its integration blocks, so no ARNs are
-      # published. The template needs every variable, but the integration
-      # ones are never rendered here.
-      template_variables = merge(local.openapi_template_variables, {
+      # published. The template needs every variable, so this takes the
+      # API's own, but the integration ones are never rendered here.
+      template_variables = merge(local.api_gateways_map["backend"].template_variables, {
         include_integrations = "false"
       })
     }

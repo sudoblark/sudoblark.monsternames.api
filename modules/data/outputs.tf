@@ -18,16 +18,6 @@ output "dynamodb_tables_map" {
   value       = local.dynamodb_tables_map
 }
 
-output "iam_roles" {
-  description = "List of enriched IAM role configurations"
-  value       = local.iam_roles_enriched
-}
-
-output "iam_roles_map" {
-  description = "Map of IAM roles keyed by short name"
-  value       = local.iam_roles_map
-}
-
 output "lambdas" {
   description = "List of enriched Lambda function configurations"
   value       = local.lambdas_enriched

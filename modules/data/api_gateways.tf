@@ -15,6 +15,17 @@
   - quota_limit (number): Requests per quota period for each key (default: 10)
   - quota_offset (number): Request offset for the initial period (default: 0)
   - quota_period (string): DAY, WEEK, or MONTH (default: "DAY")
+  - policy_statements (list(object)): What the API's integrations may do, such as
+    reading objects from S3 (default: [], no role)
+    - sid (string): Statement ID
+    - effect (string): Allow or Deny
+    - actions (list(string)): List of IAM actions
+    - resources (list(string)): ARNs, taken from other primitives' lookup maps where they exist
+
+  An API with policy_statements gets an IAM role for its integrations to assume,
+  named after the API with an -integrations suffix. The api-gateway module
+  creates it, and its ARN is added to template_variables as
+  api_gateway_iam_role_arn, for the spec's integrations to use as credentials.
 
   Constraints:
   - openapi_spec_path must point to valid OpenAPI 3.0+ specification
@@ -22,9 +33,12 @@
   - quota_* fields only apply to APIs with api_keys
   - quota_period must be one of: DAY, WEEK, MONTH
   - rate_limit must be positive, and burst_limit zero or more
-  - The api-gateway module enforces the two above with validation blocks
-  - Template variables reference other primitives through their maps
-    (e.g. local.lambdas_map["backend"].arn) rather than writing names by hand
+  - The full role name must be at most 64 characters
+  - SID must be alphanumeric (no spaces or special characters)
+  - effect must be Allow or Deny
+  - The api-gateway module enforces the limits above with validation blocks
+  - Template variables and policy resources reference other primitives through
+    their maps (e.g. local.lambdas_map["backend"].arn) rather than writing names by hand
 
   Example:
   {
@@ -32,43 +46,70 @@
     description         = "Monster Names API"
     openapi_spec_path   = "./application/openapi/spec.yaml"
     template_variables = {
-      backend_lambda_arn       = local.lambdas_map["backend"].arn
-      aws_region_name          = local.region
-      asset_bucket_name        = local.buckets_map["assets"].full_name
-      api_gateway_iam_role_arn = local.iam_roles_map["api-gateway"].arn
+      backend_lambda_arn = local.lambdas_map["backend"].arn
+      aws_region_name    = local.region
+      asset_bucket_name  = local.buckets_map["assets"].full_name
     }
     allowed_lambda_names = ["backend"]
     rate_limit           = 100
+    policy_statements = [
+      {
+        sid       = "AllowGetObjectAssetsBucket"
+        effect    = "Allow"
+        actions   = ["s3:GetObject"]
+        resources = ["${local.buckets_map["assets"].arn}/*"]
+      }
+    ]
   }
 */
 
 locals {
-  # Variables for the OpenAPI spec template, shared with the public copy of the
-  # spec in s3_files.tf
-  openapi_template_variables = {
-    backend_lambda_arn       = local.lambdas_map["backend"].arn
-    aws_region_name          = local.region
-    asset_bucket_name        = local.buckets_map["assets"].full_name
-    swagger_index_path       = "swagger_ui/index.html"
-    api_gateway_iam_role_arn = local.iam_roles_map["api-gateway"].arn
-
-    # Each monster in monsters.tf gets a path and a tag
-    monsters = jsonencode(local.monsters)
-  }
-
   api_gateways = [
     {
       name              = "backend"
       description       = "This is a relatively simple REST API, based on the OpenAPI 3.0 specification, which generates pseudo-random names for common fantasy monsters."
       openapi_spec_path = "../../application/open_api_definitions/monsternames.yaml"
-      template_variables = merge(local.openapi_template_variables, {
+      template_variables = {
+        backend_lambda_arn = local.lambdas_map["backend"].arn
+        aws_region_name    = local.region
+        asset_bucket_name  = local.buckets_map["assets"].full_name
+        swagger_index_path = "swagger_ui/index.html"
+
+        # Each monster in monsters.tf gets a path and a tag
+        monsters = jsonencode(local.monsters)
+
+        # The public copy of the spec in s3_files.tf sets this to "false"
         include_integrations = "true"
-      })
+      }
       allowed_lambda_names = ["backend"]
       rate_limit           = 100
       custom_domain = {
         subdomain_name = "monsternames"
       }
+      # The Swagger UI and the public spec at / and /openapi are S3 integrations
+      policy_statements = [
+        {
+          sid    = "AllowListAssetBucket"
+          effect = "Allow"
+          actions = [
+            "s3:ListBucket",
+            "s3:GetBucketAcl"
+          ]
+          resources = [
+            local.buckets_map["assets"].arn
+          ]
+        },
+        {
+          sid    = "AllowGetObjectAssetsBucket"
+          effect = "Allow"
+          actions = [
+            "s3:GetObject"
+          ]
+          resources = [
+            "${local.buckets_map["assets"].arn}/*"
+          ]
+        }
+      ]
     }
   ]
 }

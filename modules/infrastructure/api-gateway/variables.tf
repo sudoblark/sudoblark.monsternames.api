@@ -17,7 +17,31 @@ variable "api_gateways" {
       domain_name     = string
       certificate_arn = string
     }))
+    role_name = string
+    policy_statements = list(object({
+      sid       = string
+      effect    = string
+      actions   = list(string)
+      resources = list(string)
+    }))
   }))
+
+  validation {
+    condition = alltrue([
+      for api in var.api_gateways : length(api.role_name) <= 64
+    ])
+    error_message = "API role names must be at most 64 characters."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for api in var.api_gateways : [
+        for statement in api.policy_statements :
+        can(regex("^[A-Za-z0-9]+$", statement.sid)) && contains(["Allow", "Deny"], statement.effect)
+      ]
+    ]))
+    error_message = "Policy statement SIDs must be alphanumeric, and effects must be Allow or Deny."
+  }
 
   validation {
     condition = alltrue([
