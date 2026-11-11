@@ -58,6 +58,11 @@ output "dns_certificate_arn_regional" {
   value       = var.dns_certificate_arn_regional
 }
 
+output "api_gateway_account" {
+  description = "API Gateway's account-wide settings"
+  value       = local.api_gateway_account
+}
+
 output "defaults" {
   description = "Default values used across infrastructure"
   value = {

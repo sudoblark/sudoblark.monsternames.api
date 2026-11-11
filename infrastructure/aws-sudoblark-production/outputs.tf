@@ -10,9 +10,9 @@ output "dynamodb_tables" {
   value       = module.dynamodb.tables
 }
 
-# Output all created IAM roles, by the function or API that assumes them
+# Output all created IAM roles, by what assumes them
 output "iam_roles" {
-  description = "All created IAM roles, keyed by the Lambda or API that assumes them"
+  description = "All created IAM roles, keyed by the Lambda or API that assumes them, plus API Gateway's account-wide logging role"
   value = {
     lambdas = {
       for name, lambda in module.lambda.lambdas : name => {
@@ -25,6 +25,10 @@ output "iam_roles" {
         name = api.role_name
         arn  = api.role_arn
       } if api.role_name != null
+    }
+    api_gateway_account = {
+      name = module.api_gateway_account.cloudwatch_role_name
+      arn  = module.api_gateway_account.cloudwatch_role_arn
     }
   }
 }

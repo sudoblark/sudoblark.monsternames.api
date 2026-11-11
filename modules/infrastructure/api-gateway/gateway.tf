@@ -50,10 +50,6 @@ resource "aws_api_gateway_stage" "production" {
   tags = {
     Name = "${each.value.full_name}-production"
   }
-
-  depends_on = [
-    aws_api_gateway_account.account
-  ]
 }
 
 # Quotas for API key holders. A usage plan only limits callers who send a key,
@@ -120,33 +116,9 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api[each.value.api_name].execution_arn}/*/*/*"
 }
 
-resource "aws_api_gateway_account" "account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
-}
-
-resource "aws_iam_role" "api_gateway_cloudwatch" {
-  name = "api-gateway-cloudwatch-global"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
-  role       = aws_iam_role.api_gateway_cloudwatch.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-}
-
-# Stage-wide settings, including throttling for every caller of every method
+# Stage-wide settings, including throttling for every caller of every method.
+# Execution logging needs the account's CloudWatch role, which the
+# api-gateway-account module sets.
 resource "aws_api_gateway_method_settings" "settings" {
   for_each = local.api_gateways_map
 

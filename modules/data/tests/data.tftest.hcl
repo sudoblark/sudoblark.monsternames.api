@@ -83,6 +83,15 @@ run "dynamodb_tables" {
   }
 }
 
+run "api_gateway_account" {
+  command = plan
+
+  assert {
+    condition     = output.api_gateway_account.cloudwatch_role_name == "aws-sudoblark-production-api-gateway-cloudwatch"
+    error_message = "The account-wide CloudWatch role must be named for the account, since it serves every API in it."
+  }
+}
+
 run "lambdas" {
   command = plan
 
