@@ -66,12 +66,14 @@ output "api_gateway_account" {
 output "defaults" {
   description = "Default values used across infrastructure"
   value = {
-    account         = local.account
-    project         = local.project
-    application     = local.application
-    region          = local.region
-    account_id      = local.account_id
-    resource_prefix = local.resource_prefix
-    default_tags    = local.default_tags
+    account          = local.account
+    environment      = local.environment
+    account_settings = local.account_settings
+    project          = local.project
+    application      = local.application
+    region           = local.region
+    account_id       = local.account_id
+    resource_prefix  = local.resource_prefix
+    default_tags     = local.default_tags
   }
 }

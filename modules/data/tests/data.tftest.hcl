@@ -17,8 +17,42 @@ mock_provider "aws" {
 }
 
 variables {
+  account                      = "aws-sudoblark-production"
   dns_zone_id                  = "Z0123456789TESTZONE"
   dns_certificate_arn_regional = "arn:aws:acm:eu-west-2:123456789012:certificate/test"
+}
+
+run "accounts" {
+  command = plan
+
+  assert {
+    condition     = output.defaults.environment == "production"
+    error_message = "The account must resolve to its environment in defaults.tf."
+  }
+
+  assert {
+    condition = output.defaults.account_settings == {
+      environment        = "production"
+      api_stage_name     = "production"
+      log_retention_days = 14
+    }
+    error_message = "The account must resolve to its own settings in defaults.tf."
+  }
+
+  assert {
+    condition     = startswith(output.defaults.resource_prefix, "aws-sudoblark-production-")
+    error_message = "Resource names must start with the account passed in."
+  }
+}
+
+run "rejects_an_account_not_in_defaults" {
+  command = plan
+
+  variables {
+    account = "aws-sudoblark-staging"
+  }
+
+  expect_failures = [var.account]
 }
 
 run "buckets" {
