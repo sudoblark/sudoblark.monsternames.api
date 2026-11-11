@@ -10,6 +10,8 @@ output "lambdas" {
       last_modified                  = lambda.last_modified
       source_code_hash               = lambda.source_code_hash
       reserved_concurrent_executions = lambda.reserved_concurrent_executions
+      role_name                      = aws_iam_role.lambda[name].name
+      role_arn                       = aws_iam_role.lambda[name].arn
     }
   }
 }

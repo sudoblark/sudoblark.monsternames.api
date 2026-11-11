@@ -54,7 +54,7 @@ run "iam_roles" {
   command = plan
 
   assert {
-    condition     = output.iam_roles_map["backend-lambda"].arn == "arn:aws:iam::123456789012:role/aws-sudoblark-production-monsternames-api-backend-lambda"
+    condition     = output.iam_roles_map["api-gateway"].arn == "arn:aws:iam::123456789012:role/aws-sudoblark-production-monsternames-api-api-gateway"
     error_message = "Role ARNs must be computed from the account ID and full name."
   }
 
@@ -64,30 +64,6 @@ run "iam_roles" {
       output.iam_roles_map["api-gateway"].policy_statements[1].resources == ["arn:aws:s3:::aws-sudoblark-production-monsternames-api-assets/*"]
     )
     error_message = "Bucket short names in policy resources must resolve to bucket ARNs."
-  }
-
-  assert {
-    condition = one([
-      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.resources
-      if statement.sid == "AllowCloudWatchLogs"
-    ]) == ["arn:aws:logs:eu-west-2:123456789012:log-group:/aws/lambda/aws-sudoblark-production-monsternames-api-*"]
-    error_message = "logs:* must resolve to this project's Lambda log groups."
-  }
-
-  assert {
-    condition = one([
-      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.resources
-      if statement.sid == "AllowReadNameTables"
-    ]) == [for table in output.dynamodb_tables : table.arn]
-    error_message = "dynamodb:* must resolve to exactly the tables in dynamodb_tables.tf."
-  }
-
-  assert {
-    condition = flatten([
-      for statement in output.iam_roles_map["backend-lambda"].policy_statements : statement.actions
-      if startswith(statement.actions[0], "dynamodb:")
-    ]) == ["dynamodb:Scan"]
-    error_message = "The API is read-only, so the backend may only Scan its tables."
   }
 }
 
@@ -133,8 +109,23 @@ run "lambdas" {
   }
 
   assert {
-    condition     = output.lambdas_map["backend"].role_arn == output.iam_roles_map["backend-lambda"].arn
-    error_message = "role_name must resolve to the role's ARN."
+    condition     = output.lambdas_map["backend"].role_name == output.lambdas_map["backend"].function_name
+    error_message = "Each Lambda's role must take its function's name."
+  }
+
+  assert {
+    condition = one([
+      for statement in output.lambdas_map["backend"].policy_statements : statement.resources
+      if statement.sid == "AllowReadNameTables"
+    ]) == [for table in output.dynamodb_tables : table.arn]
+    error_message = "The backend must read exactly the tables in dynamodb_tables.tf."
+  }
+
+  assert {
+    condition = flatten([
+      for statement in output.lambdas_map["backend"].policy_statements : statement.actions
+    ]) == ["dynamodb:Scan"]
+    error_message = "The API is read-only, so the backend may only Scan its tables."
   }
 
   assert {

@@ -77,41 +77,6 @@ locals {
           ]
         }
       ]
-    },
-    {
-      name = "backend-lambda"
-      assume_policy_principals = [
-        {
-          type        = "Service"
-          identifiers = ["lambda.amazonaws.com"]
-        }
-      ]
-      policy_statements = [
-        {
-          sid    = "AllowReadNameTables"
-          effect = "Allow"
-          actions = [
-            "dynamodb:Scan"
-          ]
-          # Every table in dynamodb_tables.tf
-          resources = [
-            for table in local.dynamodb_tables_map : table.arn
-          ]
-        },
-        {
-          sid    = "AllowCloudWatchLogs"
-          effect = "Allow"
-          actions = [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ]
-          # This project's Lambda log groups
-          resources = [
-            "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*"
-          ]
-        }
-      ]
     }
   ]
 }

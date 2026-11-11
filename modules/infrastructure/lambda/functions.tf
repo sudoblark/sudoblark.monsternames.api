@@ -3,7 +3,7 @@ resource "aws_lambda_function" "lambda" {
 
   filename         = each.value.zip_file_path
   function_name    = each.value.function_name
-  role             = each.value.role_arn
+  role             = aws_iam_role.lambda[each.key].arn
   handler          = each.value.handler
   runtime          = each.value.runtime
   timeout          = each.value.timeout
@@ -33,6 +33,9 @@ resource "aws_lambda_function" "lambda" {
   tags = {
     Name = each.value.function_name
   }
+
+  # A function must not run as its role before the role's policy is attached
+  depends_on = [aws_iam_role_policy.lambda]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {

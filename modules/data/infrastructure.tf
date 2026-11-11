@@ -116,13 +116,14 @@ locals {
         reserved_concurrent_executions = -1
         security_group_ids             = []
         subnet_ids                     = []
+        policy_statements              = []
       },
       lambda,
       {
         # Computed values
         arn           = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.resource_prefix}-${lambda.name}"
-        role_arn      = local.iam_roles_map[lambda.role_name].arn
         function_name = "${local.resource_prefix}-${lambda.name}"
+        role_name     = "${local.resource_prefix}-${lambda.name}"
       }
     )
   ]
