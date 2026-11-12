@@ -41,6 +41,7 @@ variables {
       reserved_concurrent_executions = -1
       security_group_ids             = []
       subnet_ids                     = []
+      log_retention_days             = 30
       policy_statements = [
         {
           sid       = "AllowReadNameTables"

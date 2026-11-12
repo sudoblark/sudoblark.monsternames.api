@@ -15,6 +15,8 @@
   - lambda_layers (list(string)): Layer ARNs, in this region (default: [])
   - storage (number): Ephemeral storage in MB (default: 512)
   - reserved_concurrent_executions (number): Concurrency limit (default: -1, unreserved)
+  - log_retention_days (number): Days to keep the function's CloudWatch logs
+    (default: the account's log_retention_days in defaults.tf)
   - policy_statements (list(object)): What the function may do, beyond writing
     its own logs (default: [])
     - sid (string): Statement ID
@@ -30,6 +32,9 @@
   - Full Lambda name must be at most 64 characters
   - timeout must be 1-900, memory 128-10240 and storage 512-10240
   - reserved_concurrent_executions must be -1 (unreserved) or more
+  - log_retention_days must be a period CloudWatch accepts: 1, 3, 5, 7, 14, 30,
+    60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922,
+    3288 or 3653, or 0 to keep logs forever
   - SID must be alphanumeric (no spaces or special characters)
   - effect must be Allow or Deny
   - zip_file_path must exist and contain valid deployment package

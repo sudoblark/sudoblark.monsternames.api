@@ -140,6 +140,11 @@ run "lambdas" {
   }
 
   assert {
+    condition     = output.lambdas_map["backend"].log_retention_days == output.defaults.account_settings.log_retention_days
+    error_message = "A Lambda's logs must be kept for the account's log_retention_days unless its entry sets its own."
+  }
+
+  assert {
     condition = one([
       for statement in output.lambdas_map["backend"].policy_statements : statement.resources
       if statement.sid == "AllowReadNameTables"

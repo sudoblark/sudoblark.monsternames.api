@@ -42,7 +42,7 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   for_each = local.lambdas_map
 
   name              = "/aws/lambda/${each.value.function_name}"
-  retention_in_days = 14
+  retention_in_days = each.value.log_retention_days
 
   tags = {
     Name = "${each.value.function_name}-logs"

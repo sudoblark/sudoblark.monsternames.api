@@ -90,6 +90,7 @@ locals {
         security_group_ids             = []
         subnet_ids                     = []
         policy_statements              = []
+        log_retention_days             = local.account_settings.log_retention_days
       },
       lambda,
       {

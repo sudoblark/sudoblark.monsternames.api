@@ -16,6 +16,7 @@ variable "lambdas" {
     reserved_concurrent_executions = number
     security_group_ids             = list(string)
     subnet_ids                     = list(string)
+    log_retention_days             = number
     policy_statements = list(object({
       sid       = string
       effect    = string
@@ -68,5 +69,15 @@ variable "lambdas" {
       for lambda in var.lambdas : lambda.reserved_concurrent_executions >= -1
     ])
     error_message = "reserved_concurrent_executions must be -1 (unreserved) or more."
+  }
+
+  validation {
+    condition = alltrue([
+      for lambda in var.lambdas : contains(
+        [0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653],
+        lambda.log_retention_days
+      )
+    ])
+    error_message = "log_retention_days must be a retention period CloudWatch accepts, such as 7, 14 or 30, or 0 to keep logs forever."
   }
 }

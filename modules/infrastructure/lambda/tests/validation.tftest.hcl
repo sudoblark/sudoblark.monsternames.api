@@ -27,6 +27,7 @@ variables {
       reserved_concurrent_executions = -1
       security_group_ids             = []
       subnet_ids                     = []
+      log_retention_days             = 30
       policy_statements = [
         {
           sid       = "AllowReadNameTables"
@@ -41,6 +42,11 @@ variables {
 
 run "accepts_a_valid_lambda" {
   command = plan
+
+  assert {
+    condition     = aws_cloudwatch_log_group.lambda_logs["backend"].retention_in_days == 30
+    error_message = "Each function's log group must keep logs for the log_retention_days its data entry gives."
+  }
 }
 
 run "rejects_a_name_over_64_characters" {
@@ -112,6 +118,16 @@ run "rejects_reserved_concurrency_under_minus_one" {
 
   variables {
     lambdas = [merge(var.lambdas[0], { reserved_concurrent_executions = -2 })]
+  }
+
+  expect_failures = [var.lambdas]
+}
+
+run "rejects_a_retention_cloudwatch_does_not_accept" {
+  command = plan
+
+  variables {
+    lambdas = [merge(var.lambdas[0], { log_retention_days = 10 })]
   }
 
   expect_failures = [var.lambdas]
