@@ -26,6 +26,7 @@ variables {
       rate_limit                    = 100
       api_keys                      = []
       stage_name                    = "production"
+      log_retention_days            = 30
       role_name                     = "aws-sudoblark-production-monsternames-api-backend-integrations"
       policy_statements = [
         {
@@ -46,6 +47,28 @@ run "accepts_a_valid_api" {
     condition     = aws_api_gateway_stage.stage["backend"].stage_name == "production"
     error_message = "Each API's stage must take the stage_name its data entry gives."
   }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.access_logs["backend"].retention_in_days == 30
+    error_message = "Each stage's access log must be kept for the log_retention_days its data entry gives."
+  }
+
+  assert {
+    condition = keys(jsondecode(aws_api_gateway_stage.stage["backend"].access_log_settings[0].format)) == [
+      "httpMethod", "ip", "path", "protocol", "requestId", "requestTime", "responseLength", "status"
+    ]
+    error_message = "Each stage must log one JSON line per request, with no headers, query strings or bodies."
+  }
+}
+
+run "rejects_a_retention_cloudwatch_does_not_accept" {
+  command = plan
+
+  variables {
+    api_gateways = [merge(var.api_gateways[0], { log_retention_days = 10 })]
+  }
+
+  expect_failures = [var.api_gateways]
 }
 
 run "rejects_a_stage_name_with_spaces" {

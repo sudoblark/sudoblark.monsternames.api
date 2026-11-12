@@ -14,6 +14,7 @@ variable "api_gateways" {
     rate_limit                    = number
     api_keys                      = list(string)
     stage_name                    = string
+    log_retention_days            = number
     custom_domain = optional(object({
       domain_name     = string
       certificate_arn = string
@@ -32,6 +33,16 @@ variable "api_gateways" {
       for api in var.api_gateways : can(regex("^[A-Za-z0-9_-]{1,128}$", api.stage_name))
     ])
     error_message = "Stage names must be 1-128 letters, numbers, hyphens or underscores."
+  }
+
+  validation {
+    condition = alltrue([
+      for api in var.api_gateways : contains(
+        [0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653],
+        api.log_retention_days
+      )
+    ])
+    error_message = "log_retention_days must be a retention period CloudWatch accepts, such as 7, 14 or 30, or 0 to keep logs forever."
   }
 
   validation {

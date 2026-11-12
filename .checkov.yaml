@@ -11,7 +11,6 @@ skip-check:
 
   # API Gateway - Cost-related checks that we are consciously ignoring for now
   - CKV_AWS_73 # X-Ray tracing adds costs for trace recording/analysis
-  - CKV_AWS_76 # Access logging adds CloudWatch costs
   - CKV_AWS_120 # Caching costs ~$15/month minimum
   - CKV_AWS_225 # Method-level caching (same cost concerns as CKV_AWS_120)
   - CKV2_AWS_51 # Client certificate authentication not needed for Lambda backend (already secure within AWS)

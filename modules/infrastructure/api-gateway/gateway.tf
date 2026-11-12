@@ -40,12 +40,30 @@ resource "aws_api_gateway_deployment" "deployment" {
   }
 }
 
+# Each stage's access log. Writing it needs the account's CloudWatch role,
+# which the api-gateway-account module sets.
+resource "aws_cloudwatch_log_group" "access_logs" {
+  for_each = local.api_gateways_map
+
+  name              = "/aws/apigateway/${each.value.full_name}/${each.value.stage_name}"
+  retention_in_days = each.value.log_retention_days
+
+  tags = {
+    Name = "${each.value.full_name}-${each.value.stage_name}-access-logs"
+  }
+}
+
 resource "aws_api_gateway_stage" "stage" {
   for_each = local.api_gateways_map
 
   deployment_id = aws_api_gateway_deployment.deployment[each.key].id
   rest_api_id   = aws_api_gateway_rest_api.api[each.key].id
   stage_name    = each.value.stage_name
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.access_logs[each.key].arn
+    format          = local.access_log_format
+  }
 
   tags = {
     Name = "${each.value.full_name}-${each.value.stage_name}"

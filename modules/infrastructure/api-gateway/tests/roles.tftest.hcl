@@ -26,6 +26,7 @@ variables {
       rate_limit                    = 100
       api_keys                      = []
       stage_name                    = "production"
+      log_retention_days            = 30
       role_name                     = "aws-sudoblark-production-monsternames-api-backend-integrations"
       policy_statements = [
         {

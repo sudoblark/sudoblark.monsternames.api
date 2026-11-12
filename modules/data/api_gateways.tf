@@ -17,6 +17,8 @@
   - quota_period (string): DAY, WEEK, or MONTH (default: "DAY")
   - stage_name (string): Name of the API's deployment stage (default: the
     account's api_stage_name in defaults.tf)
+  - log_retention_days (number): Days to keep the stage's access log (default:
+    the account's log_retention_days in defaults.tf)
   - policy_statements (list(object)): What the API's integrations may do, such as
     reading objects from S3 (default: [], no role)
     - sid (string): Statement ID
@@ -29,6 +31,10 @@
   creates it, and its ARN is added to template_variables as
   api_gateway_iam_role_arn, for the spec's integrations to use as credentials.
 
+  Each API's stage writes one JSON line per request to its own access log,
+  /aws/apigateway/<full name>/<stage name>. The api-gateway module sets the
+  format, which leaves out headers, query strings and bodies.
+
   Constraints:
   - openapi_spec_path must point to valid OpenAPI 3.0+ specification
   - allowed_lambda_names must reference existing Lambdas in lambdas.tf
@@ -36,6 +42,9 @@
   - quota_period must be one of: DAY, WEEK, MONTH
   - rate_limit must be positive, and burst_limit zero or more
   - stage_name must be 1-128 letters, numbers, hyphens or underscores
+  - log_retention_days must be a period CloudWatch accepts: 1, 3, 5, 7, 14, 30,
+    60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922,
+    3288 or 3653, or 0 to keep logs forever
   - The full role name must be at most 64 characters
   - SID must be alphanumeric (no spaces or special characters)
   - effect must be Allow or Deny

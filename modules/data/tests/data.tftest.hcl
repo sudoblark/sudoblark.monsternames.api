@@ -214,6 +214,11 @@ run "api_gateways" {
   }
 
   assert {
+    condition     = output.api_gateways_map["backend"].log_retention_days == output.defaults.account_settings.log_retention_days
+    error_message = "An API's access log must be kept for the account's log_retention_days unless its entry sets its own."
+  }
+
+  assert {
     condition     = output.api_gateways_map["backend"].api_keys == []
     error_message = "The API is read-only, so it has no API keys."
   }

@@ -4,6 +4,19 @@ locals {
     for api in var.api_gateways : api.name => api
   }
 
+  # One JSON line per request in each stage's access log. Headers, query
+  # strings and bodies are left out, so no caller's data reaches the log.
+  access_log_format = jsonencode({
+    requestId      = "$context.requestId"
+    ip             = "$context.identity.sourceIp"
+    requestTime    = "$context.requestTime"
+    httpMethod     = "$context.httpMethod"
+    path           = "$context.path"
+    status         = "$context.status"
+    protocol       = "$context.protocol"
+    responseLength = "$context.responseLength"
+  })
+
   # APIs whose integrations need a role, such as to read from S3
   integration_roles_map = {
     for name, api in local.api_gateways_map : name => api

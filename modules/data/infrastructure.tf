@@ -128,6 +128,7 @@ locals {
         custom_domain        = null
         policy_statements    = []
         stage_name           = local.account_settings.api_stage_name
+        log_retention_days   = local.account_settings.log_retention_days
       },
       api,
       {
