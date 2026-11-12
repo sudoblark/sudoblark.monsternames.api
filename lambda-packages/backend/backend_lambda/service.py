@@ -87,32 +87,32 @@ class MonsternameService:
         full_name_parts: list[str] = []
 
         # Process both first and last name tables
-        tables_config: list[dict[str, str | None]] = [
-            {"field": "first_name", "table": self.first_name_table},
-            {"field": "last_name", "table": self.last_name_table},
+        tables_config: list[tuple[str, str | None]] = [
+            ("first_name", self.first_name_table),
+            ("last_name", self.last_name_table),
         ]
 
-        for config in tables_config:
-            if config["table"] is None:
-                logger.debug(f"Skipping {config['field']} - table not configured")
+        for field, table_name in tables_config:
+            if table_name is None:
+                logger.debug(f"Skipping {field} - table not configured")
                 continue
 
             try:
-                table = self.dynamo_db_client.Table(config["table"])
+                table = self.dynamo_db_client.Table(table_name)
                 scan_result = table.scan()
                 items: list[dict[str, Any]] = scan_result.get("Items", [])
 
                 if items:
                     random_item: str = random.choice(items)["value"]
-                    response[config["field"]] = random_item
+                    response[field] = random_item
                     full_name_parts.append(random_item)
-                    logger.debug(f"Retrieved {config['field']}: {random_item}")
+                    logger.debug(f"Retrieved {field}: {random_item}")
                 else:
-                    logger.warning(f"No items found in table: {config['table']}")
+                    logger.warning(f"No items found in table: {table_name}")
 
             except ClientError as e:
                 logger.error(
-                    f"Failed to scan table {config['table']}: {e.response['Error']['Code']}",
+                    f"Failed to scan table {table_name}: {e.response['Error']['Code']}",
                     exc_info=True,
                 )
 

@@ -15,7 +15,7 @@ Environment Variables:
 import json
 import logging
 import os
-from typing import Any
+from typing import Any, TypedDict
 
 from aws_lambda_powertools.utilities.data_classes import (
     APIGatewayProxyEvent,
@@ -31,7 +31,14 @@ logger = logging.getLogger()
 logger.setLevel(LOG_LEVEL)
 
 
-def load_monster_tables() -> dict[str, dict[str, str | None]]:
+class MonsterTables(TypedDict):
+    """A monster's table names, as MONSTER_TABLES gives them."""
+
+    first_name: str
+    last_name: str | None
+
+
+def load_monster_tables() -> dict[str, MonsterTables]:
     """
     Load each monster's table names from the MONSTER_TABLES environment variable.
 
