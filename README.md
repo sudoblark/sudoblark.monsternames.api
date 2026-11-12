@@ -77,7 +77,7 @@ pre-commit install
 
 ## CI/CD
 
-Every pull request runs `terraform fmt`, `validate` and `test`, [checkov](https://www.checkov.io/), ruff, pytest and a plan against production. Applies are run by hand, from the Terraform Apply workflow on `main`.
+Every pull request runs `terraform fmt`, `validate` and `test`, [checkov](https://www.checkov.io/), ruff, pytest, a plan against production and an [Infracost](https://www.infracost.io/) cost estimate. Applies are run by hand, from the Terraform Apply workflow on `main`.
 
 ## License
 
