@@ -14,7 +14,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  # Type stubs for boto3's DynamoDB calls, so mypy checks them
+  "boto3-stubs[dynamodb]>=1.44.1",
   "moto[dynamodb]>=5.1.22",
+  "mypy>=2.4.1",
   "pytest>=8.4.2",
   "ruff>=0.16.10",
 ]
@@ -22,6 +25,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["lambda-packages/backend"]
+
+[tool.mypy]
+files = ["lambda-packages/backend/backend_lambda"]
 
 [tool.ruff]
 line-length = 100

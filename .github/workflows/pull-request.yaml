@@ -121,6 +121,9 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check .
 
+      - name: Mypy type check
+        run: uv run mypy
+
   python_test:
     name: Python Test
     runs-on: ubuntu-latest
