@@ -134,6 +134,19 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api[each.value.api_name].execution_arn}/*/*/*"
 }
 
+# Each stage's execution log. API Gateway names it, and creates it with no
+# expiry if it doesn't exist when logging starts, so Terraform creates it first.
+resource "aws_cloudwatch_log_group" "execution_logs" {
+  for_each = local.api_gateways_map
+
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.api[each.key].id}/${each.value.stage_name}"
+  retention_in_days = each.value.log_retention_days
+
+  tags = {
+    Name = "${each.value.full_name}-${each.value.stage_name}-execution-logs"
+  }
+}
+
 # Stage-wide settings, including throttling for every caller of every method.
 # Execution logging needs the account's CloudWatch role, which the
 # api-gateway-account module sets.
@@ -151,6 +164,8 @@ resource "aws_api_gateway_method_settings" "settings" {
     throttling_rate_limit  = each.value.rate_limit
     throttling_burst_limit = each.value.burst_limit
   }
+
+  depends_on = [aws_cloudwatch_log_group.execution_logs]
 }
 
 # ============================================================================

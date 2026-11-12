@@ -215,7 +215,7 @@ run "api_gateways" {
 
   assert {
     condition     = output.api_gateways_map["backend"].log_retention_days == output.defaults.account_settings.log_retention_days
-    error_message = "An API's access log must be kept for the account's log_retention_days unless its entry sets its own."
+    error_message = "An API's logs must be kept for the account's log_retention_days unless its entry sets its own."
   }
 
   assert {

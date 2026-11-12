@@ -54,6 +54,11 @@ run "accepts_a_valid_api" {
   }
 
   assert {
+    condition     = aws_cloudwatch_log_group.execution_logs["backend"].retention_in_days == 30
+    error_message = "Each stage's execution log must be kept for the log_retention_days its data entry gives."
+  }
+
+  assert {
     condition = keys(jsondecode(aws_api_gateway_stage.stage["backend"].access_log_settings[0].format)) == [
       "httpMethod", "ip", "path", "protocol", "requestId", "requestTime", "responseLength", "status"
     ]

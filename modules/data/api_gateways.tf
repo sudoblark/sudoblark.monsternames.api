@@ -17,8 +17,8 @@
   - quota_period (string): DAY, WEEK, or MONTH (default: "DAY")
   - stage_name (string): Name of the API's deployment stage (default: the
     account's api_stage_name in defaults.tf)
-  - log_retention_days (number): Days to keep the stage's access log (default:
-    the account's log_retention_days in defaults.tf)
+  - log_retention_days (number): Days to keep the stage's access and execution
+    logs (default: the account's log_retention_days in defaults.tf)
   - policy_statements (list(object)): What the API's integrations may do, such as
     reading objects from S3 (default: [], no role)
     - sid (string): Statement ID
@@ -33,7 +33,9 @@
 
   Each API's stage writes one JSON line per request to its own access log,
   /aws/apigateway/<full name>/<stage name>. The api-gateway module sets the
-  format, which leaves out headers, query strings and bodies.
+  format, which leaves out headers, query strings and bodies. Its execution log,
+  which API Gateway names API-Gateway-Execution-Logs_<API ID>/<stage name>, is
+  created by the module too, so it expires with the access log.
 
   Constraints:
   - openapi_spec_path must point to valid OpenAPI 3.0+ specification
