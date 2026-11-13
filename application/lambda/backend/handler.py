@@ -1,9 +1,10 @@
 """
-Main Lambda handler for MonsterNames API.
+Backend Lambda handler for the MonsterNames API.
 
-This module provides the entry point for the Lambda function that serves as the
-backend for the MonsterNames REST API. It handles API Gateway events and reads
-monster names from DynamoDB tables. The API is read-only: only GET is served.
+``MonsterNamesHandler`` sits at the edge of the layers in common/: it maps each
+request's path to a monster, reads a random name through the monster name
+repository and shapes the response. The API is read-only: only GET is served.
+Lambda calls the module-level ``handler``.
 
 Environment Variables:
     MONSTER_TABLES (str): JSON map of each monster to its first_name and
@@ -15,20 +16,13 @@ Environment Variables:
 import json
 import logging
 import os
-from typing import Any, TypedDict
+from typing import Any
 
-import boto3
-from aws_lambda_powertools.utilities.data_classes import (
-    APIGatewayProxyEvent,
-    event_source,
-)
+from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from common.domain.monster_name import MonsterName
-from common.repositories.monster_name_repository import (
-    MonsterNameRepository,
-    MonsterNameTables,
-)
+from common.mixins.repo_mixins import MonsterNameRepoMixin
 
 # Configure logging
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -36,115 +30,72 @@ logger = logging.getLogger()
 logger.setLevel(LOG_LEVEL)
 
 
-class MonsterTables(TypedDict):
-    """A monster's table names, as MONSTER_TABLES gives them."""
+class MonsterNamesHandler(MonsterNameRepoMixin):
+    """Serves a random name for the monster a GET request's path names."""
 
-    first_name: str
-    last_name: str | None
+    def handle(self, event: dict[str, Any], context: LambdaContext | None = None) -> dict[str, Any]:
+        """Handle one API Gateway proxy event.
 
+        Args:
+            event: API Gateway proxy event containing request data
+            context: Lambda context object with runtime information
 
-def load_monster_tables() -> dict[str, MonsterTables]:
-    """
-    Load each monster's table names from the MONSTER_TABLES environment variable.
+        Returns:
+            The name with a 200, or an error with a 404 for an unknown monster,
+            a 405 for any method but GET, or a 500
+        """
+        request = APIGatewayProxyEvent(event)
+        try:
+            return self._serve(request)
 
-    Returns:
-        Map of monster name to its "first_name" and "last_name" table names,
-        where "last_name" is None for monsters with first names only
+        except ValueError as e:
+            logger.error(f"Configuration error: {str(e)}", exc_info=True)
+            return self._response(500, {"error": "Configuration error"})
 
-    Raises:
-        ValueError: If MONSTER_TABLES is not set or is not valid JSON
-    """
-    raw: str = os.environ.get("MONSTER_TABLES", "")
-    if not raw:
-        raise ValueError("MONSTER_TABLES environment variable is required")
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return self._response(500, {"error": "Internal server error"})
 
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"MONSTER_TABLES is not valid JSON: {e}") from e
-
-
-def to_response(name: MonsterName) -> dict[str, Any]:
-    """The response body: each part the name has, and its full name."""
-    response: dict[str, Any] = {}
-    if name.first_name:
-        response["first_name"] = name.first_name
-    if name.last_name:
-        response["last_name"] = name.last_name
-    response["full_name"] = name.full_name
-    return response
-
-
-@event_source(data_class=APIGatewayProxyEvent)
-def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, Any]:
-    """
-    Lambda handler for MonsterNames API requests.
-
-    Maps the request path to a monster, reads a random name from that monster's
-    tables and returns a properly formatted HTTP response.
-
-    Args:
-        event: API Gateway proxy event containing request data
-        context: Lambda context object with runtime information
-
-    Returns:
-        Dictionary containing HTTP status code and JSON response body
-
-    Raises:
-        ValueError: If MONSTER_TABLES is missing or invalid
-        Exception: For unexpected errors during request processing
-    """
-    try:
-        monster_tables = load_monster_tables()
-
-        # DYNAMODB_ENDPOINT points boto3 at a local DynamoDB for testing
-        dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("DYNAMODB_ENDPOINT"))
-        repository = MonsterNameRepository(
-            {
-                monster: MonsterNameTables(
-                    first_names=dynamodb.Table(tables["first_name"]),
-                    last_names=dynamodb.Table(tables["last_name"]) if tables["last_name"] else None,
-                )
-                for monster, tables in monster_tables.items()
-            }
-        )
-
-        # Parse request
-        endpoint: str = event.path
-        http_method: str = event.http_method.lower()
+    def _serve(self, request: APIGatewayProxyEvent) -> dict[str, Any]:
+        """Route the request to its monster and read the monster's name."""
+        endpoint: str = request.path
+        http_method: str = request.http_method.lower()
 
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
 
         # Each monster is served at /<name>
         monster = endpoint.strip("/")
-        if monster not in repository.monsters:
+        if monster not in self._monster_name_repo.monsters:
             logger.warning(f"Endpoint not found: {endpoint}")
-            return {"statusCode": 404, "body": json.dumps({"error": "Endpoint does not exist"})}
+            return self._response(404, {"error": "Endpoint does not exist"})
 
         # The API is read-only, so GET is the only method served
         if http_method != "get":
             logger.warning(f"Unsupported HTTP method: {http_method}")
             error = f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
-            return {"statusCode": 405, "body": json.dumps({"error": error})}
+            return self._response(405, {"error": error})
 
-        name = repository.get_random_name(monster)
-
+        name = self._monster_name_repo.get_random_name(monster)
         if name is None:
-            status_code = 500
-            response_body: dict[str, Any] = {"error": "Unable to find name entries in database"}
-        else:
-            status_code = 200
-            response_body = to_response(name)
+            return self._response(500, {"error": "Unable to find name entries in database"})
+        return self._response(200, self._to_body(name))
 
+    @staticmethod
+    def _to_body(name: MonsterName) -> dict[str, Any]:
+        """The response body: each part the name has, and its full name."""
+        body: dict[str, Any] = {}
+        if name.first_name:
+            body["first_name"] = name.first_name
+        if name.last_name:
+            body["last_name"] = name.last_name
+        body["full_name"] = name.full_name
+        return body
+
+    @staticmethod
+    def _response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
+        """An API Gateway proxy response with a JSON body."""
         logger.info(f"Request completed with status {status_code}")
-        logger.debug(f"Response body: {response_body}")
+        return {"statusCode": status_code, "body": json.dumps(body)}
 
-        return {"statusCode": status_code, "body": json.dumps(response_body)}
 
-    except ValueError as e:
-        logger.error(f"Configuration error: {str(e)}", exc_info=True)
-        return {"statusCode": 500, "body": json.dumps({"error": "Configuration error"})}
-
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        return {"statusCode": 500, "body": json.dumps({"error": "Internal server error"})}
+handler = MonsterNamesHandler().handle

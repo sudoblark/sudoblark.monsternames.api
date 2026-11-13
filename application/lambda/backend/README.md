@@ -4,10 +4,14 @@ This Lambda function serves as the backend for the read-only MonsterNames REST A
 
 ## Architecture
 
-The Lambda is structured following best practices:
+The Lambda is layered after Martin Fowler's [Patterns of Enterprise Application Architecture](https://martinfowler.com/eaaCatalog/), with dependencies running one way only. The layers every Lambda shares live in `application/lambda/common/`, which the build script bundles into the zip:
 
-- **handler.py** - Lambda handler entry point, mapping each route to its monster's tables
-- **common/** - the layers every Lambda shares, in `application/lambda/common/`: `MonsterName` in `domain/`, `MonsterNameMapper` in `mappers/`, which turns a monster's name-table items into a `MonsterName`, and `MonsterNameRepository` in `repositories/`, which pages through each monster's tables and picks a random item from each
+- **domain/** - `MonsterName`, a pure value object that owns the full name and imports nothing from the other layers
+- **mappers/** - `MonsterNameMapper`, which turns a monster's name-table items into a `MonsterName`
+- **repositories/** - `MonsterNameRepository`, which holds every monster's tables, pages through them and picks a random item from each
+- **mixins/** - `MonsterNameRepoMixin`, which builds the repository from `MONSTER_TABLES` on first use, with a setter tests use to pass a double
+
+**handler.py** holds only the edge: `MonsterNamesHandler`, composed with the mixin, maps each route to a monster, reads its name through the repository and shapes the response. Lambda calls the module-level `handler`.
 
 ## Features
 
@@ -31,11 +35,11 @@ The Lambda is structured following best practices:
 ./scripts/build-lambda.sh backend
 ```
 
-This creates `lambda-packages/backend.zip`, which holds only the handler code. Its dependencies come from AWS, as [Dependencies](#dependencies) describes.
+This creates `lambda-packages/backend.zip`, which holds only the handler and `common/`. Its dependencies come from AWS, as [Dependencies](#dependencies) describes.
 
 ## Local Testing
 
-Tests live in `tests/` at the repo root and mock DynamoDB with moto. From the repo root, [uv](https://docs.astral.sh/uv/) installs Python 3.13 and the dependencies `uv.lock` records, then runs them:
+Tests live in `tests/` at the repo root: `tests/common/` for the shared layers, and `tests/backend/` for the handler, which passes a repository double, plus wiring tests that run it end to end over DynamoDB mocked with moto. From the repo root, [uv](https://docs.astral.sh/uv/) installs Python 3.13 and the dependencies `uv.lock` records, then runs them:
 
 ```bash
 uv sync
@@ -51,6 +55,7 @@ Follows [sudoblark.documentation Python standards](https://github.com/sudoblark/
 - ✅ Comprehensive error handling
 - ✅ Structured logging
 - ✅ Clear separation of concerns (handler → repository → mapper → domain)
+- ✅ Class-based handler, with its repository composed in through a mixin
 
 ## API Usage
 
