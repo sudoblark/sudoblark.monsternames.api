@@ -7,7 +7,7 @@ This Lambda function serves as the backend for the read-only MonsterNames REST A
 The Lambda is structured following best practices:
 
 - **handler.py** - Lambda handler entry point, mapping each route to its monster's tables
-- **service.py** - Business logic for name operations
+- **common/** - the layers every Lambda shares, in `application/lambda/common/`: `MonsterName` in `domain/`, `MonsterNameMapper` in `mappers/`, which turns a monster's name-table items into a `MonsterName`, and `MonsterNameRepository` in `repositories/`, which pages through each monster's tables and picks a random item from each
 
 ## Features
 
@@ -50,7 +50,7 @@ Follows [sudoblark.documentation Python standards](https://github.com/sudoblark/
 - ✅ Google-style docstrings
 - ✅ Comprehensive error handling
 - ✅ Structured logging
-- ✅ Clear separation of concerns (handler → service)
+- ✅ Clear separation of concerns (handler → repository → mapper → domain)
 
 ## API Usage
 

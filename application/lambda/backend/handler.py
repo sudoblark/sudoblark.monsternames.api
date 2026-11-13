@@ -17,13 +17,18 @@ import logging
 import os
 from typing import Any, TypedDict
 
+import boto3
 from aws_lambda_powertools.utilities.data_classes import (
     APIGatewayProxyEvent,
     event_source,
 )
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from service import MonsternameService
+from common.domain.monster_name import MonsterName
+from common.repositories.monster_name_repository import (
+    MonsterNameRepository,
+    MonsterNameTables,
+)
 
 # Configure logging
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -59,6 +64,17 @@ def load_monster_tables() -> dict[str, MonsterTables]:
         raise ValueError(f"MONSTER_TABLES is not valid JSON: {e}") from e
 
 
+def to_response(name: MonsterName) -> dict[str, Any]:
+    """The response body: each part the name has, and its full name."""
+    response: dict[str, Any] = {}
+    if name.first_name:
+        response["first_name"] = name.first_name
+    if name.last_name:
+        response["last_name"] = name.last_name
+    response["full_name"] = name.full_name
+    return response
+
+
 @event_source(data_class=APIGatewayProxyEvent)
 def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, Any]:
     """
@@ -81,6 +97,18 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
     try:
         monster_tables = load_monster_tables()
 
+        # DYNAMODB_ENDPOINT points boto3 at a local DynamoDB for testing
+        dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("DYNAMODB_ENDPOINT"))
+        repository = MonsterNameRepository(
+            {
+                monster: MonsterNameTables(
+                    first_names=dynamodb.Table(tables["first_name"]),
+                    last_names=dynamodb.Table(tables["last_name"]) if tables["last_name"] else None,
+                )
+                for monster, tables in monster_tables.items()
+            }
+        )
+
         # Parse request
         endpoint: str = event.path
         http_method: str = event.http_method.lower()
@@ -88,14 +116,10 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
         logger.info(f"Processing {http_method.upper()} request for {endpoint}")
 
         # Each monster is served at /<name>
-        tables = monster_tables.get(endpoint.strip("/"))
-        if tables is None:
+        monster = endpoint.strip("/")
+        if monster not in repository.monsters:
             logger.warning(f"Endpoint not found: {endpoint}")
             return {"statusCode": 404, "body": json.dumps({"error": "Endpoint does not exist"})}
-
-        logger.debug(
-            f"Tables - first_name: {tables['first_name']}, last_name: {tables['last_name']}"
-        )
 
         # The API is read-only, so GET is the only method served
         if http_method != "get":
@@ -103,10 +127,14 @@ def handler(event: APIGatewayProxyEvent, context: LambdaContext) -> dict[str, An
             error = f"'{http_method.upper()}' method not supported for endpoint '{endpoint}'"
             return {"statusCode": 405, "body": json.dumps({"error": error})}
 
-        service: MonsternameService = MonsternameService(
-            first_name_table=tables["first_name"], last_name_table=tables["last_name"]
-        )
-        status_code, response_body = service.get_random_name()
+        name = repository.get_random_name(monster)
+
+        if name is None:
+            status_code = 500
+            response_body: dict[str, Any] = {"error": "Unable to find name entries in database"}
+        else:
+            status_code = 200
+            response_body = to_response(name)
 
         logger.info(f"Request completed with status {status_code}")
         logger.debug(f"Response body: {response_body}")
