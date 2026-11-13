@@ -67,6 +67,29 @@ def test_get_picks_a_name_from_the_table(
     assert body["first_name"] in names
 
 
+def test_get_returns_the_first_name_when_the_last_name_table_is_missing(
+    monster_tables: dict, seed_table: Callable, api_event: Callable, lambda_context: Any
+) -> None:
+    seed_table(monster_tables["skeleton"]["first_name"], ["Reginald"])
+
+    status, body = invoke(api_event("/skeleton"), lambda_context)
+
+    assert status == 200
+    assert body == {"first_name": "Reginald", "full_name": "Reginald"}
+
+
+def test_get_returns_the_first_name_when_the_last_name_table_is_empty(
+    monster_tables: dict, seed_table: Callable, api_event: Callable, lambda_context: Any
+) -> None:
+    seed_table(monster_tables["skeleton"]["first_name"], ["Reginald"])
+    seed_table(monster_tables["skeleton"]["last_name"], [])
+
+    status, body = invoke(api_event("/skeleton"), lambda_context)
+
+    assert status == 200
+    assert body == {"first_name": "Reginald", "full_name": "Reginald"}
+
+
 def test_get_without_tables_returns_500(
     dynamodb: Any, api_event: Callable, lambda_context: Any
 ) -> None:
