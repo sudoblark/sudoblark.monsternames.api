@@ -45,16 +45,12 @@ fi
 BUILD_DIR=$(mktemp -d)
 echo "Using temporary build directory: ${BUILD_DIR}"
 
-# Copy Lambda code: its modules, and the packages that hold its layers, such
-# as domain/. Its dependencies come from AWS, not the package: boto3 from the
-# Python runtime and Powertools from the layer in modules/data/lambdas.tf.
+# Copy Lambda code: its handler, and the common/ package of layers every
+# Lambda shares. Its dependencies come from AWS, not the package: boto3 from
+# the Python runtime and Powertools from the layer in modules/data/lambdas.tf.
 echo "Copying Lambda code..."
 cp "${LAMBDA_DIR}"/*.py "${BUILD_DIR}/"
-for package in "${LAMBDA_DIR}"/*/; do
-  if [ -f "${package}__init__.py" ]; then
-    cp -r "${package%/}" "${BUILD_DIR}/"
-  fi
-done
+cp -r ./application/lambda/common "${BUILD_DIR}/"
 
 # Create ZIP package, without bytecode caches
 echo "Creating deployment package..."

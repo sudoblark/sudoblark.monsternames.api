@@ -13,7 +13,7 @@ from typing import Any
 import boto3
 from botocore.exceptions import ClientError
 
-from domain.monster_name import MonsterName
+from common.domain.monster_name import MonsterName
 
 logger = logging.getLogger(__name__)
 

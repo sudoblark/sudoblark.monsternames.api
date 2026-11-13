@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from domain.monster_name import MonsterName, MonsterNameError
+from common.domain.monster_name import MonsterName, MonsterNameError
 
 
 def test_full_name_joins_the_first_and_last_names() -> None:
