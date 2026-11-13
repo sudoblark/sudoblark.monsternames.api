@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from backend_lambda.main import handler
+from handler import handler
 
 MONSTERS_WITH_LAST_NAMES = ["goblin", "orc", "skeleton", "troll"]
 MONSTERS_WITH_FIRST_NAMES_ONLY = ["goatmen", "ogre"]

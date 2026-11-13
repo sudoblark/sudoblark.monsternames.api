@@ -6,7 +6,7 @@ This Lambda function serves as the backend for the read-only MonsterNames REST A
 
 The Lambda is structured following best practices:
 
-- **main.py** - Lambda handler entry point, mapping each route to its monster's tables
+- **handler.py** - Lambda handler entry point, mapping each route to its monster's tables
 - **service.py** - Business logic for name operations
 
 ## Features

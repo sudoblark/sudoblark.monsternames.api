@@ -18,8 +18,11 @@ if [ -z "${LAMBDA_NAME}" ]; then
   exit 1
 fi
 
-LAMBDA_DIR="./lambda-packages/${LAMBDA_NAME}"
-OUTPUT_ZIP="$(pwd)/lambda-packages/${LAMBDA_NAME}.zip"
+# Source lives in application/lambda, and the built zip in lambda-packages,
+# where modules/data/lambdas.tf expects it
+LAMBDA_DIR="./application/lambda/${LAMBDA_NAME}"
+OUTPUT_DIR="$(pwd)/lambda-packages"
+OUTPUT_ZIP="${OUTPUT_DIR}/${LAMBDA_NAME}.zip"
 
 if [ ! -d "${LAMBDA_DIR}" ]; then
   echo "Error: Lambda directory '${LAMBDA_DIR}' does not exist"
@@ -32,6 +35,7 @@ echo "======================================"
 echo ""
 
 # Clean up previous build
+mkdir -p "${OUTPUT_DIR}"
 if [ -f "${OUTPUT_ZIP}" ]; then
   echo "Removing existing package: ${OUTPUT_ZIP}"
   rm "${OUTPUT_ZIP}"
@@ -45,9 +49,7 @@ echo "Using temporary build directory: ${BUILD_DIR}"
 # from the Python runtime and Powertools from the layer in
 # modules/data/lambdas.tf.
 echo "Copying Lambda code..."
-if [ -d "${LAMBDA_DIR}/backend_lambda" ]; then
-  cp -r "${LAMBDA_DIR}/backend_lambda" "${BUILD_DIR}/"
-fi
+cp "${LAMBDA_DIR}"/*.py "${BUILD_DIR}/"
 
 # Create ZIP package
 echo "Creating deployment package..."

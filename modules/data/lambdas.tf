@@ -7,6 +7,7 @@
   - handler (string): Lambda handler (e.g., "module.handler")
   - runtime (string): Runtime version (e.g., "python3.13")
   - zip_file_path (string): Path to deployment package relative to repo root
+    (scripts/build-lambda.sh <name> builds it from application/lambda/<name>/)
 
   Optional fields:
   - timeout (number): Timeout in seconds (default: 900)
@@ -46,7 +47,7 @@
   {
     name        = "backend"
     description = "Handles API requests for monster names"
-    handler     = "backend_lambda.main.handler"
+    handler     = "handler.handler"
     runtime     = "python3.13"
     zip_file_path = "./lambda-packages/backend.zip"
     timeout     = 60
@@ -71,7 +72,7 @@ locals {
     {
       name          = "backend"
       description   = "Retrieves monster names from DynamoDB"
-      handler       = "backend_lambda.main.handler"
+      handler       = "handler.handler"
       runtime       = "python3.13"
       zip_file_path = "../../lambda-packages/backend.zip"
       timeout       = 29

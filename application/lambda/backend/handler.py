@@ -23,7 +23,7 @@ from aws_lambda_powertools.utilities.data_classes import (
 )
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from backend_lambda.service import MonsternameService
+from service import MonsternameService
 
 # Configure logging
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()

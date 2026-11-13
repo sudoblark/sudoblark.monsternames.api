@@ -24,14 +24,14 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["lambda-packages/backend"]
+pythonpath = ["application/lambda/backend"]
 
 [tool.mypy]
-files = ["lambda-packages/backend/backend_lambda"]
+files = ["application/lambda/backend"]
 
 [tool.ruff]
 line-length = 100
-src = [".", "lambda-packages/backend"]
+src = [".", "application/lambda/backend"]
 
 [tool.ruff.lint]
 select = [

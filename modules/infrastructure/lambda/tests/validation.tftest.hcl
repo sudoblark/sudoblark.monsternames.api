@@ -15,7 +15,7 @@ variables {
       name                           = "backend"
       function_name                  = "aws-sudoblark-production-monsternames-api-backend"
       description                    = "Retrieves monster names from DynamoDB"
-      handler                        = "backend_lambda.main.handler"
+      handler                        = "handler.handler"
       runtime                        = "python3.13"
       role_name                      = "aws-sudoblark-production-monsternames-api-backend"
       zip_file_path                  = "tests/validation.tftest.hcl"
