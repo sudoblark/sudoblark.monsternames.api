@@ -18,8 +18,11 @@ if [ -z "${LAMBDA_NAME}" ]; then
   exit 1
 fi
 
-LAMBDA_DIR="./lambda-packages/${LAMBDA_NAME}"
-OUTPUT_ZIP="$(pwd)/lambda-packages/${LAMBDA_NAME}.zip"
+# Source lives in application/lambda, and the built zip in lambda-packages,
+# where modules/data/lambdas.tf expects it
+LAMBDA_DIR="./application/lambda/${LAMBDA_NAME}"
+OUTPUT_DIR="$(pwd)/lambda-packages"
+OUTPUT_ZIP="${OUTPUT_DIR}/${LAMBDA_NAME}.zip"
 
 if [ ! -d "${LAMBDA_DIR}" ]; then
   echo "Error: Lambda directory '${LAMBDA_DIR}' does not exist"
@@ -32,6 +35,7 @@ echo "======================================"
 echo ""
 
 # Clean up previous build
+mkdir -p "${OUTPUT_DIR}"
 if [ -f "${OUTPUT_ZIP}" ]; then
   echo "Removing existing package: ${OUTPUT_ZIP}"
   rm "${OUTPUT_ZIP}"
@@ -41,31 +45,17 @@ fi
 BUILD_DIR=$(mktemp -d)
 echo "Using temporary build directory: ${BUILD_DIR}"
 
-# Install dependencies
-if [ -f "${LAMBDA_DIR}/requirements.txt" ]; then
-  echo "Installing dependencies..."
-  pip install -r "${LAMBDA_DIR}/requirements.txt" -t "${BUILD_DIR}" --quiet
-  echo "✓ Dependencies installed"
-else
-  echo "⚠ No requirements.txt found, skipping dependency installation"
-fi
-
-# Copy Lambda code
+# Copy Lambda code: its handler, and the common/ package of layers every
+# Lambda shares. Its dependencies come from AWS, not the package: boto3 from
+# the Python runtime and Powertools from the layer in modules/data/lambdas.tf.
 echo "Copying Lambda code..."
-if [ -d "${LAMBDA_DIR}/backend_lambda" ]; then
-  cp -r "${LAMBDA_DIR}/backend_lambda" "${BUILD_DIR}/"
-fi
+cp "${LAMBDA_DIR}"/*.py "${BUILD_DIR}/"
+cp -r ./application/lambda/common "${BUILD_DIR}/"
 
-# Copy configuration files
-if [ -f "${LAMBDA_DIR}/config.ini" ]; then
-  cp "${LAMBDA_DIR}/config.ini" "${BUILD_DIR}/"
-  echo "✓ Copied config.ini"
-fi
-
-# Create ZIP package
+# Create ZIP package, without bytecode caches
 echo "Creating deployment package..."
 cd "${BUILD_DIR}"
-zip -r9 "${OUTPUT_ZIP}" . -q
+zip -r9 "${OUTPUT_ZIP}" . -q -x '*__pycache__*'
 cd - > /dev/null
 
 # Clean up

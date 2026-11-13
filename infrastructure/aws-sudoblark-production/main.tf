@@ -14,7 +14,9 @@ terraform {
     key    = "aws/aws-sudoblark-production/sudoblark.monsternames.api/terraform.tfstate"
     # Enable server side encryption for the state file
     encrypt = true
-    region  = "eu-west-2"
+    # Lock the state with a .tflock object beside it, so two runs can't apply at once
+    use_lockfile = true
+    region       = "eu-west-2"
     assume_role = {
       role_arn     = "arn:aws:iam::157658492476:role/aws-sudoblark-production-github-cicd-role"
       session_name = "sudoblark.terraform.modularised-demo"

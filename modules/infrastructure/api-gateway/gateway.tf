@@ -17,6 +17,10 @@ resource "aws_api_gateway_rest_api" "api" {
   lifecycle {
     create_before_destroy = true
   }
+
+  # The spec names the integrations' role, which must be able to read before
+  # the API uses it
+  depends_on = [aws_iam_role_policy.integrations]
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
@@ -36,31 +40,51 @@ resource "aws_api_gateway_deployment" "deployment" {
   }
 }
 
-resource "aws_api_gateway_stage" "production" {
+# Each stage's access log. Writing it needs the account's CloudWatch role,
+# which the api-gateway-account module sets.
+resource "aws_cloudwatch_log_group" "access_logs" {
+  for_each = local.api_gateways_map
+
+  name              = "/aws/apigateway/${each.value.full_name}/${each.value.stage_name}"
+  retention_in_days = each.value.log_retention_days
+
+  tags = {
+    Name = "${each.value.full_name}-${each.value.stage_name}-access-logs"
+  }
+}
+
+resource "aws_api_gateway_stage" "stage" {
   for_each = local.api_gateways_map
 
   deployment_id = aws_api_gateway_deployment.deployment[each.key].id
   rest_api_id   = aws_api_gateway_rest_api.api[each.key].id
-  stage_name    = "production"
+  stage_name    = each.value.stage_name
 
-  tags = {
-    Name = "${each.value.full_name}-production"
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.access_logs[each.key].arn
+    format          = local.access_log_format
   }
 
-  depends_on = [
-    aws_api_gateway_account.account
-  ]
+  tags = {
+    Name = "${each.value.full_name}-${each.value.stage_name}"
+  }
 }
 
+# Quotas for API key holders. A usage plan only limits callers who send a key,
+# so APIs without keys get none and rely on the stage throttling below.
 resource "aws_api_gateway_usage_plan" "plan" {
-  for_each = local.api_gateways_map
+  for_each = {
+    for key, api in local.api_gateways_map :
+    key => api
+    if length(api.api_keys) > 0
+  }
 
   name        = "${each.value.full_name}-plan"
   description = "Usage plan for ${each.value.full_name}"
 
   api_stages {
     api_id = aws_api_gateway_rest_api.api[each.key].id
-    stage  = aws_api_gateway_stage.production[each.key].stage_name
+    stage  = aws_api_gateway_stage.stage[each.key].stage_name
   }
 
   quota_settings {
@@ -110,56 +134,38 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api[each.value.api_name].execution_arn}/*/*/*"
 }
 
-# CloudWatch Logs for API Gateway
-resource "aws_cloudwatch_log_group" "api_gateway_access_logs" {
+# Each stage's execution log. API Gateway names it, and creates it with no
+# expiry if it doesn't exist when logging starts, so Terraform creates it first.
+resource "aws_cloudwatch_log_group" "execution_logs" {
   for_each = local.api_gateways_map
 
-  name              = "/aws/apigateway/${each.value.full_name}"
-  retention_in_days = 7
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.api[each.key].id}/${each.value.stage_name}"
+  retention_in_days = each.value.log_retention_days
 
   tags = {
-    Name = "${each.value.full_name}-access-logs"
+    Name = "${each.value.full_name}-${each.value.stage_name}-execution-logs"
   }
 }
 
-resource "aws_api_gateway_account" "account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
-}
-
-resource "aws_iam_role" "api_gateway_cloudwatch" {
-  name = "api-gateway-cloudwatch-global"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
-  role       = aws_iam_role.api_gateway_cloudwatch.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-}
-
+# Stage-wide settings, including throttling for every caller of every method.
+# Execution logging needs the account's CloudWatch role, which the
+# api-gateway-account module sets.
 resource "aws_api_gateway_method_settings" "settings" {
   for_each = local.api_gateways_map
 
   rest_api_id = aws_api_gateway_rest_api.api[each.key].id
-  stage_name  = aws_api_gateway_stage.production[each.key].stage_name
+  stage_name  = aws_api_gateway_stage.stage[each.key].stage_name
   method_path = "*/*"
 
   settings {
-    metrics_enabled    = true
-    logging_level      = "INFO"
-    data_trace_enabled = false
+    metrics_enabled        = true
+    logging_level          = "INFO"
+    data_trace_enabled     = false
+    throttling_rate_limit  = each.value.rate_limit
+    throttling_burst_limit = each.value.burst_limit
   }
+
+  depends_on = [aws_cloudwatch_log_group.execution_logs]
 }
 
 # ============================================================================
@@ -196,7 +202,7 @@ resource "aws_api_gateway_base_path_mapping" "custom_domain_mapping" {
   }
 
   api_id      = aws_api_gateway_rest_api.api[each.key].id
-  stage_name  = aws_api_gateway_stage.production[each.key].stage_name
+  stage_name  = aws_api_gateway_stage.stage[each.key].stage_name
   domain_name = aws_api_gateway_domain_name.custom_domain[each.key].domain_name
 }
 

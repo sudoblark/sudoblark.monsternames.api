@@ -14,7 +14,7 @@
   Constraints:
   - source_path must exist and be readable
   - bucket_name must reference an existing bucket in buckets.tf
-  - object_key should not start with "/"
+  - object_key must not start with "/", which the s3-files module enforces
 
   Bucket References (resolved in infrastructure.tf):
   - Bucket names → Full bucket IDs and ARNs
@@ -44,6 +44,13 @@ locals {
       bucket_name  = "assets"
       object_key   = "open_api_definitions/monsternames.yaml"
       content_type = "application/x-yaml"
+
+      # The API's spec without its integration blocks, so no ARNs are
+      # published. The template needs every variable, so this takes the
+      # API's own, but the integration ones are never rendered here.
+      template_variables = merge(local.api_gateways_map["backend"].template_variables, {
+        include_integrations = "false"
+      })
     }
   ]
 }

@@ -1,0 +1,44 @@
+[project]
+name = "monsternames-api"
+version = "3.0.0"
+description = "The monsternames API's backend Lambda."
+# The Lambda's runtime in modules/data/lambdas.tf
+requires-python = "==3.13.*"
+# What the Lambda imports. AWS supplies both, so its zip carries neither:
+# boto3 comes with the runtime, and Powertools with the layer in
+# modules/data/lambdas.tf, pinned here to the release that layer ships.
+dependencies = [
+  "aws-lambda-powertools==3.39.0",
+  "boto3>=1.34.0",
+]
+
+[dependency-groups]
+dev = [
+  # Type stubs for boto3's DynamoDB calls, so mypy checks them
+  "boto3-stubs[dynamodb]>=1.44.1",
+  "moto[dynamodb]>=5.1.22",
+  "mypy>=2.4.1",
+  "pytest>=8.4.2",
+  "ruff>=0.16.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["application/lambda", "application/lambda/backend"]
+
+[tool.mypy]
+files = ["application/lambda/backend", "application/lambda/common"]
+
+[tool.ruff]
+line-length = 100
+src = [".", "application/lambda", "application/lambda/backend"]
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # import sorting
+  "B",  # bugbear
+  "UP", # pyupgrade
+]

@@ -19,11 +19,8 @@ locals {
     for bucket in local.buckets : merge(
       {
         # Defaults
-        account             = local.account
-        project             = local.project
-        application         = local.application
         folder_paths        = []
-        days_retention      = 365
+        days_retention      = null
         multipart_retention = 7
         enable_event_bridge = false
         log_bucket          = null
@@ -45,54 +42,32 @@ locals {
 }
 
 # ============================================================================
-# IAM Roles Enrichment
+# DynamoDB Tables Enrichment
 # ============================================================================
 
 locals {
-  # Enrich IAM role data with computed values and resolve cross-references
-  iam_roles_enriched = [
-    for role in local.iam_roles : merge(
+  # Enrich DynamoDB table data with computed values and seed items
+  dynamodb_tables_enriched = [
+    for table in local.dynamodb_tables : merge(
       {
         # Defaults
-        account     = local.account
-        project     = local.project
-        application = local.application
-        path        = "/"
-        conditions  = []
+        seed_data_path = null
       },
-      role,
+      table,
       {
         # Computed values
-        full_name = "${local.resource_prefix}-${role.name}"
-        arn       = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${role.name}"
+        full_name = "${local.resource_prefix}-${table.name}"
+        arn       = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.resource_prefix}-${table.name}"
 
-        # Resolve policy statement resources with actual ARNs
-        policy_statements = [
-          for stmt in role.policy_statements : merge(
-            stmt,
-            {
-              resources = [
-                for resource in stmt.resources :
-                # S3 bucket ARN resolution
-                resource == "assets" ? local.buckets_map["assets"].arn :
-                resource == "assets/*" ? "${local.buckets_map["assets"].arn}/*" :
-                # DynamoDB ARN resolution
-                resource == "dynamodb:*" ? "arn:aws:dynamodb:${local.region}:${local.account_id}:table/*" :
-                # CloudWatch Logs ARN resolution
-                resource == "logs:*" ? "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${local.resource_prefix}-*" :
-                # Pass through if already an ARN
-                resource
-              ]
-            }
-          )
-        ]
+        # Load seed items from the table's JSON file
+        items = try(table.seed_data_path, null) == null ? [] : jsondecode(file(table.seed_data_path))
       }
     )
   ]
 
   # Create lookup map for cross-referencing
-  iam_roles_map = {
-    for role in local.iam_roles_enriched : role.name => role
+  dynamodb_tables_map = {
+    for table in local.dynamodb_tables_enriched : table.name => table
   }
 }
 
@@ -106,9 +81,6 @@ locals {
     for lambda in local.lambdas : merge(
       {
         # Defaults
-        account                        = local.account
-        project                        = local.project
-        application                    = local.application
         timeout                        = 900
         memory                         = 512
         environment_variables          = {}
@@ -117,23 +89,15 @@ locals {
         reserved_concurrent_executions = -1
         security_group_ids             = []
         subnet_ids                     = []
+        policy_statements              = []
+        log_retention_days             = local.account_settings.log_retention_days
       },
       lambda,
       {
         # Computed values
-        full_name     = "${local.resource_prefix}-${lambda.name}"
         arn           = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.resource_prefix}-${lambda.name}"
-        role_arn      = local.iam_roles_map[lambda.role_name].arn
         function_name = "${local.resource_prefix}-${lambda.name}"
-
-        # Resolve Lambda layers to full ARNs
-        lambda_layers = [
-          for layer in lambda.lambda_layers :
-          # PowerTools Python layer
-          layer == "powertools-python" ? "arn:aws:lambda:${local.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2:73" :
-          # Pass through if already an ARN
-          layer
-        ]
+        role_name     = "${local.resource_prefix}-${lambda.name}"
       }
     )
   ]
@@ -149,17 +113,11 @@ locals {
 # ============================================================================
 
 locals {
-  # Determine base domain based on environment
-  base_domain = local.account == "aws-sudoblark-production" ? "sudoblark.com" : "${replace(local.account, "aws-sudoblark-", "")}.sudoblark.com"
-
   # Enrich API Gateway data with computed values and resolve cross-references
   api_gateways_enriched = [
     for api in local.api_gateways : merge(
       {
         # Defaults
-        account              = local.account
-        project              = local.project
-        application          = local.application
         allowed_lambda_names = []
         quota_limit          = 10
         quota_offset         = 0
@@ -168,45 +126,27 @@ locals {
         rate_limit           = 10
         api_keys             = []
         custom_domain        = null
+        policy_statements    = []
+        stage_name           = local.account_settings.api_stage_name
+        log_retention_days   = local.account_settings.log_retention_days
       },
       api,
       {
         # Computed values
         full_name = "${local.resource_prefix}-${api.name}"
+        role_name = "${local.resource_prefix}-${api.name}-integrations"
+        role_arn  = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${api.name}-integrations"
 
-        # Resolve Lambda ARNs from names
-        allowed_lambda_arns = [
-          for lambda_name in api.allowed_lambda_names :
-          local.lambdas_map[lambda_name].arn
-        ]
+        # The spec's integrations take the API's role as their credentials
+        template_variables = merge(api.template_variables, {
+          api_gateway_iam_role_arn = "arn:aws:iam::${local.account_id}:role/${local.resource_prefix}-${api.name}-integrations"
+        })
+
+        # Resolve Lambda function names from short names
         allowed_lambda_function_names = [
           for lambda_name in api.allowed_lambda_names :
           local.lambdas_map[lambda_name].function_name
         ]
-
-        # Compute custom domain configuration
-        custom_domain_computed = api.custom_domain != null ? {
-          domain_name           = "${api.custom_domain.subdomain_name}.${local.base_domain}"
-          certificate_arn       = var.dns_certificate_arn_regional
-          create_route53_record = try(api.custom_domain.create_route53_record, false)
-        } : null
-
-        # Resolve template variables
-        template_variables = {
-          for key, value in api.template_variables :
-          key => (
-            # Lambda ARN resolution
-            value == "backend" && key == "backend_lambda_arn" ? local.lambdas_map["backend"].arn :
-            # Region resolution
-            value == "region" ? local.region :
-            # Bucket name resolution
-            value == "assets" && key == "asset_bucket_name" ? local.buckets_map["assets"].full_name :
-            # IAM role ARN resolution
-            value == "api-gateway" && key == "api_gateway_iam_role_arn" ? local.iam_roles_map["api-gateway"].arn :
-            # Pass through other values
-            value
-          )
-        }
       },
       # Merge custom domain if present
       api.custom_domain != null ? {
@@ -234,17 +174,13 @@ locals {
     for file in local.s3_files : merge(
       {
         # Defaults
-        account            = local.account
-        project            = local.project
-        application        = local.application
         content_type       = null
         template_variables = {}
       },
       file,
       {
         # Computed values - resolve bucket references
-        bucket_id  = local.buckets_map[file.bucket_name].full_name
-        bucket_arn = local.buckets_map[file.bucket_name].arn
+        bucket_id = local.buckets_map[file.bucket_name].full_name
       }
     )
   ]

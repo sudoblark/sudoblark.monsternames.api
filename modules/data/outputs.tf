@@ -8,14 +8,14 @@ output "buckets_map" {
   value       = local.buckets_map
 }
 
-output "iam_roles" {
-  description = "List of enriched IAM role configurations"
-  value       = local.iam_roles_enriched
+output "dynamodb_tables" {
+  description = "List of enriched DynamoDB table configurations"
+  value       = local.dynamodb_tables_enriched
 }
 
-output "iam_roles_map" {
-  description = "Map of IAM roles keyed by short name"
-  value       = local.iam_roles_map
+output "dynamodb_tables_map" {
+  description = "Map of DynamoDB tables keyed by short name"
+  value       = local.dynamodb_tables_map
 }
 
 output "lambdas" {
@@ -58,15 +58,22 @@ output "dns_certificate_arn_regional" {
   value       = var.dns_certificate_arn_regional
 }
 
+output "api_gateway_account" {
+  description = "API Gateway's account-wide settings"
+  value       = local.api_gateway_account
+}
+
 output "defaults" {
   description = "Default values used across infrastructure"
   value = {
-    account         = local.account
-    project         = local.project
-    application     = local.application
-    region          = local.region
-    account_id      = local.account_id
-    resource_prefix = local.resource_prefix
-    default_tags    = local.default_tags
+    account          = local.account
+    environment      = local.environment
+    account_settings = local.account_settings
+    project          = local.project
+    application      = local.application
+    region           = local.region
+    account_id       = local.account_id
+    resource_prefix  = local.resource_prefix
+    default_tags     = local.default_tags
   }
 }

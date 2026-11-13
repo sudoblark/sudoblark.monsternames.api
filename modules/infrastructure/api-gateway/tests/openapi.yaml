@@ -1,0 +1,6 @@
+# Minimal spec for the module's validation tests
+openapi: 3.0.1
+info:
+  title: Test
+  version: 1.0.0
+paths: {}
