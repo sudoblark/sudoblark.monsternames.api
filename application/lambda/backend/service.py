@@ -13,6 +13,8 @@ from typing import Any
 import boto3
 from botocore.exceptions import ClientError
 
+from domain.monster_name import MonsterName
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,8 +85,7 @@ class MonsternameService:
             >>> print(response)
             {'first_name': 'Sven', 'last_name': 'Gongleson', 'full_name': 'Sven Gongleson'}
         """
-        response: dict[str, str] = {}
-        full_name_parts: list[str] = []
+        names: dict[str, str] = {}
 
         # Process both first and last name tables
         tables_config: list[tuple[str, str | None]] = [
@@ -104,8 +105,7 @@ class MonsternameService:
 
                 if items:
                     random_item: str = random.choice(items)["value"]
-                    response[field] = random_item
-                    full_name_parts.append(random_item)
+                    names[field] = random_item
                     logger.debug(f"Retrieved {field}: {random_item}")
                 else:
                     logger.warning(f"No items found in table: {table_name}")
@@ -116,9 +116,19 @@ class MonsternameService:
                     exc_info=True,
                 )
 
-        # Build response
-        if full_name_parts:
-            response["full_name"] = " ".join(full_name_parts)
-            return 200, response
-        else:
+        if not names:
             return 500, {"error": "Unable to find name entries in database"}
+
+        name = MonsterName(first_name=names.get("first_name"), last_name=names.get("last_name"))
+        return 200, self._to_response(name)
+
+    @staticmethod
+    def _to_response(name: MonsterName) -> dict[str, Any]:
+        """The response body: each part the name has, and its full name."""
+        response: dict[str, Any] = {}
+        if name.first_name:
+            response["first_name"] = name.first_name
+        if name.last_name:
+            response["last_name"] = name.last_name
+        response["full_name"] = name.full_name
+        return response
